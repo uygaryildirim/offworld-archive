@@ -258,9 +258,59 @@
     return new Promise((resolve, reject) => {
       const item = new Image();
       item.onload = () => resolve(item);
-      item.onerror = () => reject(new Error(`NASA yükselti verisi açılamadı: ${src}`));
+      item.onerror = () => reject(new Error(`Surface image could not load: ${src}`));
       item.src = src;
     });
+  }
+
+  function imagePixels(source){
+    const canvas=document.createElement('canvas');canvas.width=source.naturalWidth;canvas.height=source.naturalHeight;
+    const context=canvas.getContext('2d',{willReadFrequently:true});context.drawImage(source,0,0);return {width:canvas.width,height:canvas.height,pixels:context.getImageData(0,0,canvas.width,canvas.height).data};
+  }
+  const clamp01=value=>Math.max(0,Math.min(1,value));
+  function paintDottedMoon(canvas,illumination,albedo,dem){
+    const cssSize=canvas.parentElement.getBoundingClientRect().width||80,dpr=Math.min(window.devicePixelRatio||1,2.5),size=Math.max(64,Math.round(cssSize*dpr));
+    canvas.width=size;canvas.height=size;const context=canvas.getContext('2d');context.clearRect(0,0,size,size);
+    const radius=size*.455,step=Math.max(1.55,dpr*.94),theta=Math.acos(2*illumination-1),sunX=Math.sin(theta),sunZ=Math.cos(theta),
+      bucketCount=9,buckets=Array.from({length:bucketCount},()=>[]),c={a:albedo,dem};
+    const pixel=(data,w,h,x,y)=>{x=(x%w+w)%w;y=Math.max(0,Math.min(h-1,y));return data[(y*w+x)*4];};
+    for(let y=-radius;y<=radius;y+=step)for(let x=-radius;x<=radius;x+=step){
+      const nx=x/radius,ny=-y/radius,radial=nx*nx+ny*ny;if(radial>=1)continue;
+      const nz=Math.sqrt(1-radial),lon=Math.atan2(nx,nz),lat=Math.asin(ny),
+        ax=Math.round((lon/(Math.PI*2)+.5)*c.a.width),ay=Math.round((.5-lat/Math.PI)*c.a.height),
+        dx=Math.round((lon/(Math.PI*2)+.5)*c.dem.width),dy=Math.round((.5-lat/Math.PI)*c.dem.height),
+        texture=pixel(c.a.pixels,c.a.width,c.a.height,ax,ay)/255,
+        terrain=pixel(c.dem.pixels,c.dem.width,c.dem.height,dx,dy)/255,
+        slopeX=(pixel(c.dem.pixels,c.dem.width,c.dem.height,dx+4,dy)-pixel(c.dem.pixels,c.dem.width,c.dem.height,dx-4,dy))/255,
+        slopeY=(pixel(c.dem.pixels,c.dem.width,c.dem.height,dx,dy+4)-pixel(c.dem.pixels,c.dem.width,c.dem.height,dx,dy-4))/255,
+        light=clamp01(nx*sunX+nz*sunZ),
+        relief=clamp01(.72+(-slopeX*sunX+slopeY*.35)*2.4),
+        surface=clamp01((texture*.72+terrain*.2+.08)*relief),
+        brightness=clamp01((.13+surface*.68)*(.14+light*.86)),
+        level=Math.min(bucketCount-1,Math.floor(brightness*(bucketCount-1))),
+        dotRadius=step*(.24+brightness*.2);
+      buckets[level].push([size/2+x,size/2+y,dotRadius]);
+    }
+    buckets.forEach((dots,level)=>{
+      if(!dots.length)return;const tone=Math.round(151+level*11.3);context.beginPath();
+      for(const [x,y,r] of dots){context.moveTo(x+r,y);context.arc(x,y,r,0,Math.PI*2);}
+      const representativeAlpha=.045+(level/(bucketCount-1))*.82;
+      context.fillStyle=`rgba(${tone},${tone+4},${tone-2},${representativeAlpha.toFixed(3)})`;context.fill();
+    });
+  }
+  async function runMoonPhaseJourney(){
+    const boot=$('#boot-screen'),cards=[...document.querySelectorAll('.phase-card')],fractions=[.025,.16,.33,.5,.67,.84,.985];
+    const setActive=(index)=>cards.forEach((card,i)=>{card.classList.toggle('active',i===index);if(i===index)card.classList.add('visited');});
+    try{
+      const [surface,elevation]=await Promise.all([image('./assets/maps/moon-color.jpg'),image('./assets/maps/moon-height.png')]);
+      const albedo=imagePixels(surface),dem=imagePixels(elevation);
+      cards.forEach((card,index)=>paintDottedMoon(card.querySelector('canvas'),fractions[index],albedo,dem));
+    }catch(error){console.warn('Dotted Moon artwork could not load',error);}
+    boot.classList.add('phase-ready');setActive(3);await new Promise(resolve=>setTimeout(resolve,420));
+    const journey=[2,1,0,1,2,3,4,5,6];
+    for(const index of journey){setActive(index);await new Promise(resolve=>setTimeout(resolve,285));}
+    boot.classList.add('show-gallery');await new Promise(resolve=>setTimeout(resolve,1250));
+    boot.classList.add('return-to-center');setActive(3);await new Promise(resolve=>setTimeout(resolve,620));
   }
 
   class SiteMeshMap {
@@ -797,17 +847,17 @@
     }
   }
 
-  async function initMap() {
+  async function initMap(introPromise) {
     try {
       map = new SiteMeshMap($('#terrain-canvas'));
       await map.setWorld(world);
       $('#map-status').style.display = 'none';
-      setTimeout(()=>$('#boot-screen').classList.add('hidden'),1550);
+      await introPromise;$('#boot-screen').classList.add('hidden');
     } catch (error) {
       console.error('Site mesh could not load', error);
-      setTimeout(()=>$('#boot-screen').classList.add('hidden'),1550);
       $('#map-status').classList.add('error'); $('#map-status').style.display = 'grid';
       $('#map-status').innerHTML = '<span class="status-symbol">!</span><b>MESH AÇILAMADI</b><p>Yerel NASA yüzey atlasları yüklenemedi. Sayfayı web sunucusu üzerinden yeniden aç.</p>';
+      await introPromise;$('#boot-screen').classList.add('hidden');
     }
   }
 
@@ -892,5 +942,5 @@
   $('#oldest-stat').textContent = worlds.moon.oldest;
   $('#timeline-range').textContent = `${worlds.moon.oldest} — ${worlds.moon.last}`;
   document.querySelector('.stat:nth-child(2) span').textContent = worlds.moon.oldestName;
-  selected = records.moon[0].id;$('#toolbar-record-count').textContent=String(records.moon.length).padStart(2,'0');buildLunarPhaseMarks();applyLanguage(); renderList(); initMap();
+  selected = records.moon[0].id;$('#toolbar-record-count').textContent=String(records.moon.length).padStart(2,'0');buildLunarPhaseMarks();applyLanguage();renderList();const introPromise=runMoonPhaseJourney();initMap(introPromise);
 })();

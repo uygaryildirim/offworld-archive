@@ -6,10 +6,18 @@
   <meta name="theme-color" content="#0a0c0e" />
   <meta name="description" content="An interactive archive of NASA equipment and mission traces left on the Moon and Mars." />
   <title>Offworld Archive — Surface Records</title>
-  <link rel="stylesheet" href="./styles.css?v=20261115-3" />
+  <link rel="stylesheet" href="./styles.css?v=20261115-4" />
 </head>
 <body>
-  <div class="boot-screen" id="boot-screen" aria-label="Loading Offworld Archive"><div class="boot-emblem"><svg class="lunar-mark boot-mark" viewBox="0 0 480 200" aria-hidden="true"><path class="infinity-halo" d="M40 100C40 28 145 20 240 100C335 180 440 172 440 100C440 28 335 20 240 100C145 180 40 172 40 100Z"/><path class="infinity-trail" id="loader-infinity" d="M40 100C40 28 145 20 240 100C335 180 440 172 440 100C440 28 335 20 240 100C145 180 40 172 40 100Z"/><circle class="orbit-spark" r="3.2"><animateMotion dur="12s" repeatCount="indefinite" rotate="auto"><mpath href="#loader-infinity"/></animateMotion></circle><g class="lunar-phases"></g></svg></div><span>OFFWORLD ARCHIVE</span><small>MOON PHASES · MISSION TRACES</small></div>
+  <div class="boot-screen" id="boot-screen" aria-label="Loading Offworld Archive"><div class="phase-intro"><div class="phase-row" id="phase-row"><i class="phase-wire" aria-hidden="true"></i>
+    <div class="phase-card" data-phase="0"><span class="phase-sphere"><canvas class="phase-moon" aria-hidden="true"></canvas></span><small class="phase-label">NEW MOON</small></div>
+    <div class="phase-card" data-phase="1"><span class="phase-sphere"><canvas class="phase-moon" aria-hidden="true"></canvas></span><small class="phase-label">WAXING CRESCENT</small></div>
+    <div class="phase-card" data-phase="2"><span class="phase-sphere"><canvas class="phase-moon" aria-hidden="true"></canvas></span><small class="phase-label">WAXING CRESCENT</small></div>
+    <div class="phase-card" data-phase="3"><span class="phase-sphere"><canvas class="phase-moon" aria-hidden="true"></canvas></span><small class="phase-label">FIRST QUARTER</small></div>
+    <div class="phase-card" data-phase="4"><span class="phase-sphere"><canvas class="phase-moon" aria-hidden="true"></canvas></span><small class="phase-label">WAXING GIBBOUS</small></div>
+    <div class="phase-card" data-phase="5"><span class="phase-sphere"><canvas class="phase-moon" aria-hidden="true"></canvas></span><small class="phase-label">WAXING GIBBOUS</small></div>
+    <div class="phase-card" data-phase="6"><span class="phase-sphere"><canvas class="phase-moon" aria-hidden="true"></canvas></span><small class="phase-label">FULL MOON</small></div>
+  </div><div class="phase-caption"><span>THE LUNAR CYCLE</span><i></i><span>29.53 DAYS</span></div></div><span>OFFWORLD ARCHIVE</span><small>NASA SURFACE RECORDS · MOON / MARS</small></div>
   <div class="app-shell">
     <header class="topbar">
       <a class="brand" href="#" aria-label="Offworld Archive ana sayfa"><span class="brand-mark">OA</span><span>OFFWORLD <b>ARCHIVE</b></span></a>
@@ -70,6 +78,6 @@
   <script src="./data.js?v=20261115-1"></script>
   <script src="./assets/stars.js?v=20261114-1"></script>
   <script src="./assets/space-ephemeris.js?v=20261114-1"></script>
-  <script src="./app.js?v=20261115-3" defer></script>
+  <script src="./app.js?v=20261115-4" defer></script>
 </body>
 </html>

@@ -13,7 +13,7 @@ NASA Space Apps 2026 için Ay ve Mars yüzeyinde bırakılmış insan yapımı i
 - Yüzey yüksekliği NASA Trek DEM verisinden türetilen gezegene özgü renkler, rölyef gölgesi ve ince/kalın izohipslerle gösterilir. Mesh satırları güvenli 16-bit parçalara bölünür; önceki yatay bant aralığı giderilmiştir. Gölgeleme yer şekillerini belirginleştirir; enlem-boylam ızgarası kullanılmaz.
 - Sol sabit menü kaldırıldı; üstteki **Arşiv** düğmesi arama, tür filtresi ve tüm kayıtları gerektiğinde açar. Ay/Mars geçişi ve TR/EN arayüz seçimi harita üzerinde bulunur.
 - Site ilk açılışta İngilizce gelir; `EN / TR` düğmesiyle Türkçeye geçilir ve tercih tarayıcıda saklanır.
-- Açılış ve alt bant logosunda yatay sonsuzluk izi üzerinde noktalardan oluşan, yumuşakça parlayan Ay evreleri kullanılır.
+- Açılış ekranı, NASA'nın Ay mozaiği ve yükselti atlasından üretilen yüksek yoğunluklu nokta dokulu yedi küre gösterir. Animasyon ortadaki yarım evreden sola yeni aya, sağa dolunaya ilerler; evre adlarını gösterdikten sonra merkeze dönüp arşivi açar. Alt bant logosunda daha küçük noktalı Ay evreleri bulunur.
 - Altı Apollo iniş sahasının her biri tıklanabilir astronot piniyle gösterilir. Kartta Ay’da yürüyen iki astronotun adı, iniş sahası, NASA NSSDCA koordinatı ve kısa görev özeti bulunur.
 - NASA'nın tarihî Ay kayıtları ile Mars yüzeyine ulaşan araçlar listelenir. Faal araçlar yeşil, görevi tamamlananlar kırmızı gösterilir; koordinat güveni ayrı olarak bilgi kartında belirtilir. Rover pinleri son araç konumu değil, aksi doğrulanmadıkça görev/iniş sahasıdır.
 - Koordinatı bilinmeyen kayıtlar katalogda yer alır fakat haritada pin üretilmez; yaklaşık konumlar bilgi kartında açıkça işaretlenir.
@@ -24,7 +24,7 @@ NASA Space Apps 2026 için Ay ve Mars yüzeyinde bırakılmış insan yapımı i
 - Ay yüzey ağında LOLA/MOLA yükselti örnekleri 5×5 Gauss filtresiyle yumuşatılır ve Ay relief derinliği azaltılır; Mars yükselti renk rampası yeniden doygun kızıl-turuncu tonlara çekilmiştir. Harita pinleri topoğrafik yüzey yarıçapına oturur ve kürenin arka tarafında gizlenir.
 - Yakınlaştırma 4,3× seviyesini geçince sağ bilgi kartında gerçek renk mozaiğinden türetilen küçük yön küresi ve merkez koordinatı belirir. Tekerlek yakınlaştırması imleç altındaki yüzeyi sabitler; `+ / −` ekran merkezine odaklanır.
 - Bilgi kartı, NASA'nın açık görsel arşivinden kayıtla eşleşen fotoğrafı getirir. NASA'nın web için yayımladığı Apollo Lunar Module, Perseverance, InSight ve Ingenuity 3D modelleri seçilen kayıt kartında sürüklenebilir olarak açılır; diğer kayıtlar NASA fotoğrafı gösterir. Modeller ana küreye ayrı bir WebGL sahnesi ekleyerek yüzeyle örtüşme ve performans sorunları yaratacağından konum işaretçilerinin yerine konmaz.
-- Sayfa ilk açılırken yatay sonsuzluk izi üzerinde noktalı Ay evrelerini gösteren animasyon görünür. Aynı Offworld Archive amblemi alt bantta NASA Space Apps atfıyla kullanılır; NASA logosu değildir.
+- İlk yükleme animasyonu NASA'nın yüzey mozaiğinden çizilen noktalı Ay evrelerini gösterir. Alt banttaki özgün Offworld Archive amblemi NASA Space Apps atfıyla kullanılır; NASA logosu değildir.
 
 İzohipsler Ay için LOLA 128 ppd, Mars için MOLA 463 m/piksel sayısal yükseklik modellerinden hesaplanır. Yükselti atlasları 4096×2048 pikseldir ve küre geometrisi 0,5° aralıkla örneklenir. Yakın plandaki renkli görüntü NASA Trek WMTS karolarından gelir; topoğrafik kontur çizgilerinin çözünürlüğü yerel LOLA/MOLA atlasıyla sınırlıdır. Arayüz yakınlaştırması kaynak çözünürlüğünü yapay olarak artırmaz.
 

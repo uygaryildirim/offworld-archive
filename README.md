@@ -14,7 +14,7 @@ An interactive archive of NASA hardware and mission traces left on the Moon and 
 - Open NASA photographs in record cards, with interactive web 3D models for Apollo Lunar Module, Perseverance, InSight, and Ingenuity where NASA publishes compatible models.
 - View a real-star catalog backdrop, subdued planetary labels, and a small orientation globe when zoomed in.
 - Start in English; use the `EN / TR` control to switch to Turkish. The preference is saved in the browser.
-- See the animated dotted Moon-phase cycle on a horizontal infinity path during the opening screen and in the footer mark.
+- The opening screen renders seven high-density dotted Moon spheres from the bundled NASA lunar mosaic and elevation atlas. The sequence starts at first quarter, moves left toward new Moon, sweeps right to full Moon, presents the labeled phases, returns to the half-lit center, then opens the archive. A smaller dotted phase motif remains in the footer mark.
 - No server-side API key, Cesium token, or environment variable is required.
 
 ## Run locally
