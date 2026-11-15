@@ -272,7 +272,7 @@
   function paintDottedMoon(canvas,illumination,albedo,dem){
     const cssSize=canvas.parentElement.getBoundingClientRect().width||80,dpr=Math.min(window.devicePixelRatio||1,2.5),size=Math.max(64,Math.round(cssSize*dpr));
     canvas.width=size;canvas.height=size;const context=canvas.getContext('2d');context.clearRect(0,0,size,size);
-    const radius=size*.455,step=Math.max(1.55,dpr*.94),theta=Math.acos(2*illumination-1),sunX=Math.sin(theta),sunZ=Math.cos(theta),
+    const radius=size*.455,step=Math.max(1.4,dpr*.72),theta=Math.acos(2*illumination-1),sunX=Math.sin(theta),sunZ=Math.cos(theta),
       bucketCount=9,buckets=Array.from({length:bucketCount},()=>[]),c={a:albedo,dem};
     const pixel=(data,w,h,x,y)=>{x=(x%w+w)%w;y=Math.max(0,Math.min(h-1,y));return data[(y*w+x)*4];};
     for(let y=-radius;y<=radius;y+=step)for(let x=-radius;x<=radius;x+=step){
@@ -287,15 +287,15 @@
         light=clamp01(nx*sunX+nz*sunZ),
         relief=clamp01(.72+(-slopeX*sunX+slopeY*.35)*2.4),
         surface=clamp01((texture*.72+terrain*.2+.08)*relief),
-        brightness=clamp01((.13+surface*.68)*(.14+light*.86)),
+        brightness=clamp01((.18+surface*.68)*(.34+light*.66)),
         level=Math.min(bucketCount-1,Math.floor(brightness*(bucketCount-1))),
-        dotRadius=step*(.36+brightness*.13);
+        dotRadius=step*(.52+brightness*.12);
       buckets[level].push([size/2+x,size/2+y,dotRadius]);
     }
     buckets.forEach((dots,level)=>{
-      if(!dots.length)return;const tone=Math.round(169+level*8.2);context.beginPath();
+      if(!dots.length)return;const tone=Math.round(205+level*5.5);context.beginPath();
       for(const [x,y,r] of dots){context.moveTo(x+r,y);context.arc(x,y,r,0,Math.PI*2);}
-      const representativeAlpha=.22+(level/(bucketCount-1))*.74;
+      const representativeAlpha=.34+(level/(bucketCount-1))*.64;
       context.fillStyle=`rgba(${tone},${tone+4},${tone-2},${representativeAlpha.toFixed(3)})`;context.fill();
     });
   }
@@ -436,6 +436,8 @@
 
     uploadTexture(source) {
       const gl = this.gl, texture = gl.createTexture();
+      if (!texture) throw new Error('WebGL texture could not be allocated.');
+      for (let i = 0; i < 8 && gl.getError() !== gl.NO_ERROR; i++) {}
       gl.bindTexture(gl.TEXTURE_2D, texture);
       gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, source);
@@ -443,18 +445,31 @@
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      const error = gl.getError();
+      if (error !== gl.NO_ERROR) {
+        gl.deleteTexture(texture);
+        throw new Error(`WebGL texture upload failed (0x${error.toString(16)}).`);
+      }
       return texture;
     }
 
     async setWorld(name) {
       const version = ++this.loadVersion, source = worlds[name];
-      const surfaceImage = await image(`./assets/maps/${source.image}?v=20261114-17`);
-      const heightImage = await image(`./assets/maps/${source.height}?v=20261114-6`);
+      let stage = 'surface atlas';
+      let surfaceImage, heightImage;
+      try {
+      surfaceImage = await image(`./assets/maps/${source.image}?v=20261114-17`);
+      stage = 'elevation atlas';
+      heightImage = await image(`./assets/maps/${source.height}?v=20261114-6`);
       if (version !== this.loadVersion) return;
+      stage = 'elevation processing';
       const heightCanvas = document.createElement('canvas');
-      heightCanvas.width = heightImage.naturalWidth; heightCanvas.height = heightImage.naturalHeight;
+      const heightScale = Math.min(1, 2048 / heightImage.naturalWidth);
+      heightCanvas.width = Math.max(1, Math.round(heightImage.naturalWidth * heightScale));
+      heightCanvas.height = Math.max(1, Math.round(heightImage.naturalHeight * heightScale));
+      this.elevationWidth = heightCanvas.width; this.elevationHeight = heightCanvas.height;
       const context = heightCanvas.getContext('2d', {willReadFrequently: true});
-      context.drawImage(heightImage, 0, 0);
+      context.drawImage(heightImage, 0, 0, heightCanvas.width, heightCanvas.height);
       const pixels = context.getImageData(0, 0, heightCanvas.width, heightCanvas.height).data;
       this.sampleHeight = (u, v) => {
         const x = Math.max(0, Math.min(heightCanvas.width - 1, Math.round(u * (heightCanvas.width - 1))));
@@ -467,9 +482,12 @@
         for(let iy=-2;iy<=2;iy++)for(let ix=-2;ix<=2;ix++){const weight=weights[ix+2]*weights[iy+2];sum+=this.sampleHeight(u+ix*sx,v+iy*sy)*weight;total+=weight;}
         return sum/total;
       };
+      stage = 'surface mesh';
       this.makeGrid();
+      stage = 'elevation texture';
       if (this.elevationTexture) this.gl.deleteTexture(this.elevationTexture);
-      this.elevationTexture = this.uploadTexture(heightImage);
+      this.elevationTexture = this.uploadTexture(heightCanvas);
+      stage = 'surface texture';
       if (this.surfaceTexture) this.gl.deleteTexture(this.surfaceTexture);
       this.surfaceTexture = this.uploadTexture(surfaceImage);
       this.surfaceImage = surfaceImage;
@@ -477,11 +495,14 @@
       this.surfacePixelsCanvas.width=Math.min(1024,surfaceImage.naturalWidth); this.surfacePixelsCanvas.height=Math.min(512,surfaceImage.naturalHeight);
       const surfaceContext=this.surfacePixelsCanvas.getContext('2d',{willReadFrequently:true});
       surfaceContext.drawImage(surfaceImage,0,0,this.surfacePixelsCanvas.width,this.surfacePixelsCanvas.height); this.surfacePixels=surfaceContext.getImageData(0,0,this.surfacePixelsCanvas.width,this.surfacePixelsCanvas.height).data;
-      if (this.detailTexture) this.gl.deleteTexture(this.detailTexture);
-      this.detailTexture = this.uploadTexture(surfaceImage);
+      if (this.detailTexture && this.detailTexture !== this.surfaceTexture) this.gl.deleteTexture(this.detailTexture);
+      this.detailTexture = null;
       this.detailReady = false; this.detailKey = ''; this.detailLoading = ''; this.detailGeneration = 0;
       this.world = name;
       this.home();
+      } catch (error) {
+        throw new Error(`${name.toUpperCase()} ${stage}: ${error.message}`, {cause:error});
+      }
     }
 
     makeGrid() {
@@ -791,7 +812,7 @@
       gl.uniform4fv(this.locations.u_detail_bounds, this.detailBounds || [0,0,1,1]);
       gl.uniform1f(this.locations.u_detail_ready, this.detailReady ? 1 : 0);
       gl.uniform1f(this.locations.u_zoom, this.view.zoom);
-      gl.uniform2f(this.locations.u_texel, 1 / 4096, 1 / 2048);
+      gl.uniform2f(this.locations.u_texel, 1 / this.elevationWidth, 1 / this.elevationHeight);
       gl.uniform2fv(this.locations.u_color_range, worlds[this.world].colorRange);
       gl.uniform1f(this.locations.u_contour_count, worlds[this.world].contours);
       gl.uniform1f(this.locations.u_major_every, worlds[this.world].majorEvery);
@@ -859,10 +880,17 @@
       await introPromise;$('#boot-screen').classList.add('hidden');
     } catch (error) {
       console.error('Site mesh could not load', error);
-      $('#map-status').classList.add('error'); $('#map-status').style.display = 'grid';
-      $('#map-status').innerHTML = `<span class="status-symbol">!</span><b>${language==='tr'?'YÜZEY HARİTASI AÇILAMADI':'SURFACE MAP FAILED'}</b><p>${language==='tr'?'NASA yüzey verisi açılamadı. Sayfayı yenileyin; sorun sürerse geliştirici konsolundaki hata ayrıntısına bakın.':'NASA surface data could not be opened. Refresh the page; if the problem persists, check the developer console for details.'}</p>`;
+      showSurfaceError(`${world.toUpperCase()} ${language==='tr'?'YÜZEY HARİTASI AÇILAMADI':'SURFACE MAP FAILED'}`, error.message);
       await introPromise;$('#boot-screen').classList.add('hidden');
     }
+  }
+
+  function showSurfaceError(title, detail) {
+    const status=$('#map-status'),symbol=document.createElement('span'),heading=document.createElement('b'),message=document.createElement('p');
+    status.replaceChildren();status.classList.add('error');status.style.display='grid';
+    symbol.className='status-symbol';symbol.textContent='!';heading.textContent=title;
+    message.textContent=`${language==='tr'?'Yüzey yüklenemedi':'Surface could not be loaded'}: ${detail}`;
+    status.append(symbol,heading,message);
   }
 
   function updateWorldUI() {
@@ -909,12 +937,13 @@
       $('#map-status').style.display = 'grid';
       try {
         await map.setWorld(previous);
-        if (requestVersion === worldSwitchVersion && map.world === previous) $('#map-status').style.display = 'none';
+        if (requestVersion === worldSwitchVersion && map.world === previous) {
+          showSurfaceError(`${next.toUpperCase()} ${language==='tr'?'YÜZEYİ AÇILAMADI':'SURFACE FAILED'}`, error.message);
+        }
       } catch (recoveryError) {
         console.error(`Could not restore ${previous} surface`, recoveryError);
         if (requestVersion === worldSwitchVersion) {
-          $('#map-status').classList.add('error');
-          $('#map-status').innerHTML = `<span class="status-symbol">!</span><b>${language==='tr'?'YÜZEY YÜKLENEMEDİ':'SURFACE UNAVAILABLE'}</b><p>${language==='tr'?'Harita geri yüklenemedi. Sayfayı yenileyin.':'The map could not be restored. Refresh the page.'}</p>`;
+          showSurfaceError(`${previous.toUpperCase()} ${language==='tr'?'YÜZEYİ GERİ YÜKLENEMEDİ':'SURFACE RECOVERY FAILED'}`, recoveryError.message);
         }
       }
     }
