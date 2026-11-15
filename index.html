@@ -6,14 +6,9 @@
   <meta name="theme-color" content="#0a0c0e" />
   <meta name="description" content="An interactive archive of NASA equipment and mission traces left on the Moon and Mars." />
   <title>Offworld Archive — Surface Records</title>
-  <link rel="stylesheet" href="./styles.css?v=20261115-13" />
+  <link rel="stylesheet" href="./styles.css?v=20261115-15" />
 </head>
 <body>
-  <div class="boot-screen" id="boot-screen" aria-label="Loading Offworld Archive"><div class="phase-intro">
-    <div class="phase-kicker"><i></i><span>LUNAR SURFACE / SIGNAL ACQUISITION</span><b>01</b></div>
-    <div class="phase-row" id="phase-row"><canvas class="phase-moon" id="phase-moon" aria-label="A pointillist Moon made from NASA surface data"></canvas><canvas class="phase-sparkles" id="phase-sparkles" aria-hidden="true"></canvas></div>
-    <div class="phase-caption"><span id="phase-current">LUNAR SURFACE · DOT ATLAS</span><i></i><span>NASA LUNAR ARCHIVE</span></div>
-  </div><span>OFFWORLD ARCHIVE</span><small>NASA SURFACE RECORDS · MOON / MARS</small></div>
   <div class="app-shell">
     <header class="topbar">
       <a class="brand" href="#" aria-label="Offworld Archive ana sayfa"><span class="brand-mark">OA</span><span>OFFWORLD <b>ARCHIVE</b></span></a>
@@ -38,7 +33,7 @@
           <div class="section-label"><span data-i18n="records">RECORDS</span> <span id="record-count">04 SHOWN</span></div>
           <label class="search-wrap"><span>⌕</span><input id="search" type="search" placeholder="Search missions or equipment" autocomplete="off" /></label>
           <div class="filter-row" role="group" aria-label="Kayıt türü filtresi">
-            <button class="filter active" data-filter="all">All</button><button class="filter" data-filter="mobile">Mobile</button><button class="filter" data-filter="lander">Landers</button>
+            <button class="filter active" data-filter="all">All</button><button class="filter" data-filter="mobile">Mobile</button><button class="filter" data-filter="lander">Landers</button><button class="filter" data-filter="3d">3D models</button>
           </div>
           <div id="record-list" class="record-list" aria-live="polite"></div>
         </aside>
@@ -46,7 +41,7 @@
         <section class="map-panel" aria-label="Gerçek yüzey haritası ve konumlar">
           <div class="map-toolbar"><button id="archive-toggle" class="toolbar-button" aria-expanded="false" aria-controls="archive-drawer"><span>☷</span><b data-i18n="archive">ARCHIVE</b><small id="toolbar-record-count">—</small></button><div class="toolbar-spacer"></div><div class="world-quick-switch" role="group" aria-label="Choose a world"><button data-world="moon" class="quick-world selected">MOON</button><button data-world="mars" class="quick-world">MARS</button></div><button id="language-toggle" class="toolbar-button language-button" aria-label="Change language">EN <i>/</i> TR</button></div>
           <div class="map-topline"><div><span class="coordinate-icon">⌖</span><span id="map-title">LUNAR SURFACE · ELEVATION ATLAS</span></div></div>
-          <div id="map" role="application" aria-label="Interactive Moon or Mars surface globe with NASA terrain data"><canvas id="space-canvas" aria-hidden="true"></canvas><canvas id="space-glow-canvas" aria-hidden="true"></canvas><canvas id="terrain-canvas"></canvas><div id="space-objects" aria-hidden="true"></div><div id="space-caption" aria-hidden="true">STAR FIELD · HYG / J2000</div><div id="planet-labels" aria-label="Major geographic features"></div><div id="mesh-pins" aria-label="Mission site markers"></div><div id="map-status" class="map-status"><span class="status-symbol">◌</span><b>PREPARING NASA SURFACE GLOBE</b><p>Loading real surface imagery and elevation contours.</p></div></div>
+          <div id="map" role="application" aria-label="Interactive Moon or Mars surface globe with NASA terrain data"><canvas id="space-canvas" aria-hidden="true"></canvas><canvas id="terrain-canvas"></canvas><div id="space-objects" aria-hidden="true"></div><div id="space-caption" aria-hidden="true">STAR FIELD · HYG / J2000</div><div id="planet-labels" aria-label="Major geographic features"></div><div id="mesh-pins" aria-label="Mission site markers"></div><div id="map-status" class="map-status"><span class="status-symbol">◌</span><b>PREPARING NASA SURFACE GLOBE</b><p>Loading real surface imagery and elevation contours.</p></div></div>
           <div class="map-overlay map-note"><span class="note-dot"></span><span id="layer-name">LOLA 128 ppd DEM · NASA TREK</span></div>
           <div class="map-controls"><button id="zoom-out" aria-label="Zoom out">−</button><button id="zoom-in" aria-label="Zoom in">+</button><button id="reset-view" aria-label="Reset view">⌖</button></div>
         </section>
@@ -69,11 +64,11 @@
       </section>
     </main>
 
-  <footer><span class="footer-brand"><svg class="lunar-mark footer-mark" viewBox="0 0 480 200" aria-hidden="true"><path class="infinity-halo" d="M40 100C40 28 145 20 240 100C335 180 440 172 440 100C440 28 335 20 240 100C145 180 40 172 40 100Z"/><path class="infinity-trail" id="footer-infinity" d="M40 100C40 28 145 20 240 100C335 180 440 172 440 100C440 28 335 20 240 100C145 180 40 172 40 100Z"/><g class="lunar-phases"></g></svg><span>OFFWORLD ARCHIVE <small>· NASA SPACE APPS CHALLENGE 2026</small></span></span><span class="footer-via"><span data-i18n="dataVia">DATA VIA</span> <a href="https://trek.nasa.gov/" target="_blank" rel="noreferrer">NASA TREK · LOLA · MOLA ↗</a></span><span class="footer-coordinate" data-i18n="coordinateNote">COORDINATES SHOWN AT SOURCE CONFIDENCE</span></footer>
+  <footer><span class="footer-brand"><svg class="lunar-mark footer-mark" viewBox="0 0 480 200" aria-hidden="true"><path class="infinity-halo" d="M40 100C40 28 145 20 240 100C335 180 440 172 440 100C440 28 335 20 240 100C145 180 40 172 40 100Z"/><path class="infinity-trail" id="footer-infinity" d="M40 100C40 28 145 20 240 100C335 180 440 172 440 100C440 28 335 20 240 100C145 180 40 172 40 100Z"/></svg><span>OFFWORLD ARCHIVE <small>· NASA SPACE APPS CHALLENGE 2026</small></span></span><span class="footer-via"><span data-i18n="dataVia">DATA VIA</span> <a href="https://trek.nasa.gov/" target="_blank" rel="noreferrer">NASA TREK · LOLA · MOLA ↗</a></span><span class="footer-coordinate" data-i18n="coordinateNote">COORDINATES SHOWN AT SOURCE CONFIDENCE</span></footer>
   </div>
   <script src="./data.js?v=20261115-1"></script>
   <script src="./assets/stars.js?v=20261114-1"></script>
   <script src="./assets/space-ephemeris.js?v=20261114-1"></script>
-  <script src="./app.js?v=20261115-13" defer></script>
+  <script src="./app.js?v=20261115-15" defer></script>
 </body>
 </html>
