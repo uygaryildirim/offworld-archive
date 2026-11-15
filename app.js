@@ -314,20 +314,33 @@
         terrain=pixel(c.dem.pixels,c.dem.width,c.dem.height,dx,dy)/255,
         slopeX=(pixel(c.dem.pixels,c.dem.width,c.dem.height,dx+4,dy)-pixel(c.dem.pixels,c.dem.width,c.dem.height,dx-4,dy))/255,
         slopeY=(pixel(c.dem.pixels,c.dem.width,c.dem.height,dx,dy+4)-pixel(c.dem.pixels,c.dem.width,c.dem.height,dx,dy-4))/255,
-        surface=clamp01((texture*.68+terrain*.24+.08)*.72+(-slopeX+slopeY*.35)*.12);
-      dots.push({x:size/2+x,y:size/2+y,nx,nz,surface,sweep:(1-nx)*.5,radius:step*.54});
+        relief=clamp01(.78+(-slopeX+slopeY*.35)*1.5),
+        surface=clamp01((texture*.68+terrain*.24+.08)*relief),
+        seed=Math.abs(Math.sin((x+431.7)*127.1+(y+173.3)*311.7)*43758.5453),
+        random=seed-Math.floor(seed);
+      dots.push({x:size/2+x,y:size/2+y,nx,ny,surface,sweep:(nx+1)*.5,radius:step*(.48+surface*.15),sparkle:random>.995,sparklePhase:random*Math.PI*2});
     }
     return {size,step,dots,context:canvas.getContext('2d')};
   }
-  function paintDottedMoon(model,illumination,sweepProgress){
+  function lunarShadowOffset(illumination){
+    let low=0,high=2;
+    for(let i=0;i<18;i++){
+      const offset=(low+high)*.5,half=offset*.5;
+      const lit=1-(2*Math.acos(Math.min(1,half))-half*Math.sqrt(Math.max(0,4-offset*offset)))/Math.PI;
+      if(lit<illumination)low=offset;else high=offset;
+    }
+    return (low+high)*.5;
+  }
+  function paintDottedMoon(model,illumination,sweepProgress,now=performance.now()){
     const {size,step,dots,context}=model;
     context.clearRect(0,0,size,size);
-    const theta=Math.acos(2*illumination-1),sunX=Math.sin(theta),sunZ=Math.cos(theta),bucketCount=9,buckets=Array.from({length:bucketCount},()=>[]);
+    const shadowX=lunarShadowOffset(illumination),bucketCount=9,buckets=Array.from({length:bucketCount},()=>[]),sparkles=[];
     for(const dot of dots){
       if(dot.sweep>sweepProgress)continue;
-      const light=clamp01(dot.nx*sunX+dot.nz*sunZ);if(light<=.008)continue;
-      const brightness=clamp01(.12+dot.surface*.24+Math.pow(light,.62)*.64),level=Math.min(bucketCount-1,Math.floor(brightness*(bucketCount-1)));
-      buckets[level].push([dot.x,dot.y,step*(.52+brightness*.12)]);
+      if((dot.nx-shadowX)**2+dot.ny**2<=1)continue;
+      const brightness=clamp01(.28+dot.surface*.68),level=Math.min(bucketCount-1,Math.floor(brightness*(bucketCount-1)));
+      buckets[level].push([dot.x,dot.y,dot.radius]);
+      if(dot.sparkle){const pulse=(Math.sin(now*.0018+dot.sparklePhase)+1)*.5;if(pulse>.91)sparkles.push([dot.x,dot.y,dot.radius,pulse]);}
     }
     buckets.forEach((dots,level)=>{
       if(!dots.length)return;const tone=Math.round(214+level*4.6);context.beginPath();
@@ -335,20 +348,23 @@
       const representativeAlpha=.58+(level/(bucketCount-1))*.4;
       context.fillStyle=`rgba(${tone},${tone+4},${tone-2},${representativeAlpha.toFixed(3)})`;context.fill();
     });
+    context.save();context.shadowColor='rgba(226,244,210,.8)';context.shadowBlur=3;
+    for(const [x,y,r,pulse] of sparkles){context.beginPath();context.arc(x,y,r*(1.1+pulse*.35),0,Math.PI*2);context.fillStyle=`rgba(244,250,232,${(.15+pulse*.32).toFixed(3)})`;context.fill();}
+    context.restore();
   }
   async function runMoonPhaseJourney(){
-    const boot=$('#boot-screen'),canvas=$('#phase-moon'),row=$('#phase-row'),caption=$('#phase-current');
+    const boot=$('#boot-screen'),canvas=$('#phase-moon'),caption=$('#phase-current');
     try{
       const [surface,elevation]=await Promise.all([image('./assets/maps/moon-color.jpg'),image('./assets/maps/moon-height.png')]);
       const albedo=imagePixels(surface),dem=imagePixels(elevation),model=createDottedMoon(canvas,albedo,dem);
-      paintDottedMoon(model,.025,.055);row.style.setProperty('--phase-progress','0deg');
+      paintDottedMoon(model,.015,.035);
       caption.textContent=language==='tr'?'YENİ AY · 02% AYDINLIK':'NEW MOON · 02% ILLUMINATED';
       boot.classList.add('phase-ready');
       const started=performance.now(),duration=1250;
       await new Promise(resolve=>{
         const frame=now=>{
-          const t=Math.min(1,(now-started)/duration),eased=t*t*(3-2*t),illumination=.025+.975*eased,sweep=.055+.945*eased;
-          paintDottedMoon(model,illumination,sweep);row.style.setProperty('--phase-progress',`${eased*360}deg`);
+          const t=Math.min(1,(now-started)/duration),eased=t*t*(3-2*t),illumination=.015+.985*eased,sweep=.035+.965*eased;
+          paintDottedMoon(model,illumination,sweep,now);
           const label=illumination<.09?'NEW MOON':illumination<.39?'WAXING CRESCENT':illumination<.61?'FIRST QUARTER':illumination<.96?'WAXING GIBBOUS':'FULL MOON';
           const localized=language==='tr'?({'NEW MOON':'YENİ AY','WAXING CRESCENT':'HİLAL','FIRST QUARTER':'İLK DÖRDÜN','WAXING GIBBOUS':'ŞİŞKİN AY','FULL MOON':'DOLUNAY'}[label]):label;
           caption.textContent=`${localized} · ${String(Math.round(illumination*100)).padStart(2,'0')}% ${language==='tr'?'AYDINLIK':'ILLUMINATED'}`;
