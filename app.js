@@ -6,28 +6,34 @@
   };
   const landmarks = {
     moon: [
-      {name:'OCEANUS PROCELLARUM', lat:18.4, lon:-57.4}, {name:'MARE IMBRIUM', lat:32.8, lon:-15.6},
-      {name:'COPERNICUS', lat:9.6, lon:-20.1}, {name:'TYCHO', lat:-43.3, lon:-11.2},
-      {name:'MARE TRANQUILLITATIS', lat:.68, lon:23.43}, {name:'MARE SERENITATIS', lat:28, lon:17.5},
-      {name:'ARISTARCHUS', lat:23.7, lon:-47.4}
+      {name:'OCEANUS PROCELLARUM',nameTr:'FIRTINALAR OKYANUSU',lat:18.4,lon:-57.4,factEn:'The Moon’s largest dark basalt plain, formed when ancient lava flooded a vast impact basin.',factTr:'Ay’ın en büyük koyu bazalt ovası; eski bir çarpma havzasını lavların doldurmasıyla oluştu.',source:'https://science.nasa.gov/moon/moon-water-and-ices/',sourceLabel:'NASA lunar surface overview'},
+      {name:'MARE IMBRIUM',nameTr:'YAĞMURLAR DENİZİ',lat:32.8,lon:-15.6,factEn:'A vast impact basin later covered by volcanic lava. Its name means “Sea of Showers.”',factTr:'Daha sonra volkanik lavlarla örtülmüş geniş bir çarpma havzası. Adı “Yağmurlar Denizi” anlamına gelir.',source:'https://science.nasa.gov/moon/moon-water-and-ices/',sourceLabel:'NASA Moon overview'},
+      {name:'COPERNICUS',nameTr:'KOPERNİK KRATERİ',lat:9.6,lon:-20.1,factEn:'A bright, roughly 96 km impact crater named for astronomer Nicolaus Copernicus. Its rays make it easy to spot from Earth.',factTr:'Yaklaşık 96 km genişliğindeki parlak çarpma krateri, gökbilimci Nicolaus Copernicus’un adını taşır. Parlak ışınları Dünya’dan seçilebilir.',source:'https://planetarynames.wr.usgs.gov/Feature/1296',sourceLabel:'USGS / IAU planetary names',image:'https://science.nasa.gov/wp-content/uploads/2024/01/copern-lwac731a-1.png',imageCredit:'NASA/GSFC/ASU'},
+      {name:'TYCHO',nameTr:'TYCHO KRATERİ',lat:-43.3,lon:-11.2,factEn:'A young, sharply defined impact crater whose bright rays spread across much of the lunar near side.',factTr:'Genç ve belirgin bir çarpma krateridir. Parlak ışınları Ay’ın bize dönük yüzünün büyük bölümüne yayılır.',source:'https://science.nasa.gov/moon/moon-water-and-ices/',sourceLabel:'NASA lunar surface overview'},
+      {name:'MARE TRANQUILLITATIS',nameTr:'SÜKÛNET DENİZİ',lat:.68,lon:23.43,factEn:'The basalt plain where Apollo 11 landed in 1969; the first crewed landing on the Moon.',factTr:'Apollo 11’in 1969’da indiği bazalt ovası; Ay’daki ilk insanlı inişin sahası.',source:'https://science.nasa.gov/mission/apollo-11/',sourceLabel:'NASA Apollo 11'},
+      {name:'MARE SERENITATIS',nameTr:'HUZUR DENİZİ',lat:28,lon:17.5,factEn:'A broad lunar mare formed inside an ancient impact basin. Apollo 17 explored its southern edge.',factTr:'Eski bir çarpma havzasında oluşmuş geniş bir Ay düzlüğüdür. Apollo 17 güney kenarını keşfetti.',source:'https://science.nasa.gov/mission/apollo-17/',sourceLabel:'NASA Apollo 17'},
+      {name:'ARISTARCHUS',nameTr:'ARİSTARKHOS',lat:23.7,lon:-47.4,factEn:'One of the brightest large craters on the Moon, set beside the volcanic plateau of Aristarchus.',factTr:'Ay’daki en parlak büyük kraterlerden biridir; Aristarhos volkanik platosunun yanında yer alır.',source:'https://science.nasa.gov/moon/image-galleries/moonscapes/',sourceLabel:'NASA lunar image gallery'}
     ],
     mars: [
-      {name:'OLYMPUS MONS', lat:18.65, lon:-133.8}, {name:'VALLES MARINERIS', lat:-13, lon:-59},
-      {name:'HELLAS PLANITIA', lat:-42, lon:70}, {name:'GALE CRATER', lat:-5.4, lon:137.8},
-      {name:'JEZERO CRATER', lat:18.4, lon:77.7}, {name:'ELYSIUM MONS', lat:25, lon:147}
+      {name:'OLYMPUS MONS',nameTr:'OLYMPUS MONS',lat:18.65,lon:-133.8,factEn:'The largest volcano in the Solar System rises more than 40 km from its base to summit and spans an area comparable to Arizona.',factTr:'Güneş Sistemi’nin en büyük yanardağıdır. Tabanından zirvesine 40 km’den fazla yükselir ve Arizona’ya yakın bir alan kaplar.',source:'https://science.nasa.gov/mars/facts/',sourceLabel:'NASA Mars facts',image:'https://assets.science.nasa.gov/dynamicimage/assets/science/psd/photojournal/pia/pia00/pia00300/PIA00300.jpg?crop=faces%2Cfocalpoint&fit=clip&h=1421&w=1536',imageCredit:'NASA/JPL/USGS'},
+      {name:'VALLES MARINERIS',nameTr:'VALLES MARINERIS',lat:-13,lon:-59,factEn:'A canyon system about 4,000 km long, among the largest and deepest known in the Solar System.',factTr:'Yaklaşık 4.000 km uzunluğundaki bu kanyon sistemi, Güneş Sistemi’nde bilinen en büyük ve en derin yapılardandır.',source:'https://science.nasa.gov/mars/facts/',sourceLabel:'NASA Mars facts'},
+      {name:'HELLAS PLANITIA',nameTr:'HELLAS PLANITIA',lat:-42,lon:70,factEn:'A huge impact basin in Mars’ southern hemisphere, with a floor several kilometres below the planet’s reference level.',factTr:'Mars’ın güney yarımküresindeki dev bir çarpma havzası; tabanı gezegenin referans seviyesinin kilometrelerce altındadır.',source:'https://science.nasa.gov/mars/facts/',sourceLabel:'NASA Mars facts'},
+      {name:'GALE CRATER',nameTr:'GALE KRATERİ',lat:-5.4,lon:137.8,factEn:'A 154 km impact crater explored by Curiosity. Its layered central mountain preserves a long record of changing Martian environments.',factTr:'Curiosity’nin keşfettiği 154 km genişliğindeki çarpma krateridir. Merkezindeki katmanlı dağ, Mars çevresinin değişimine dair uzun bir kayıt taşır.',source:'https://science.nasa.gov/mission/msl-curiosity/',sourceLabel:'NASA Curiosity mission'},
+      {name:'JEZERO CRATER',nameTr:'JEZERO KRATERİ',lat:18.4,lon:77.7,factEn:'Perseverance explores this ancient crater lake and delta to study past habitability and collect rock samples.',factTr:'Perseverance, geçmişte yaşama elverişli koşulları araştırmak ve kaya örnekleri toplamak için bu eski krater gölünü ve deltayı inceliyor.',source:'https://science.nasa.gov/mission/mars-2020-perseverance/',sourceLabel:'NASA Perseverance mission'},
+      {name:'ELYSIUM MONS',nameTr:'ELYSIUM MONS',lat:25,lon:147,factEn:'A broad shield volcano in the Elysium volcanic province, the second-largest volcanic region on Mars.',factTr:'Mars’ın ikinci büyük volkanik bölgesi olan Elysium volkanik alanındaki geniş bir kalkan yanardağıdır.',source:'https://science.nasa.gov/mars/facts/',sourceLabel:'NASA Mars facts'}
     ]
   };
   const $ = selector => document.querySelector(selector);
   const i18n = {
-    tr:{archive:'ARŞİV',viewOrientation:'GÖRÜŞ YÖNÜ',dataVia:'VERİ KAYNAĞI',coordinateNote:'KOORDİNATLAR KAYNAKTAKİ KESİNLİKLE SUNULUR',search:'Görev veya araç ara',records:'KAYITLAR',selected:'SEÇİLİ KAYIT',year:'GÖREV YILI',status:'GÖREV DURUMU',coords:'ENLEM / BOYLAM',type:'KAYIT TÜRÜ',confidence:'KONUM GÜVENİ',source:'KAYNAĞI AÇ',noResults:'Eşleşen kayıt yok',noResultsHint:'Aramayı veya filtreyi değiştir.',faal:'FAAL',inactive:'FAAL DEĞİL',destination:'HEDEF',moon:'AY',mars:'MARS',crew:'AY YÜZEYİNDE YÜRÜYENLER',landing:'İNİŞ SAHASI',missionResult:'GÖREV SONUCU',landed:'AY’A İNİŞ',mission:'GÖREV',missionType:'AY GÖREVİ'},
-    en:{archive:'ARCHIVE',viewOrientation:'VIEW ORIENTATION',dataVia:'DATA VIA',coordinateNote:'COORDINATES SHOWN AT SOURCE CONFIDENCE',search:'Search missions or equipment',records:'RECORDS',selected:'SELECTED RECORD',year:'MISSION YEAR',status:'MISSION STATUS',coords:'LATITUDE / LONGITUDE',type:'RECORD TYPE',confidence:'LOCATION CONFIDENCE',source:'OPEN SOURCE',noResults:'No matching records',noResultsHint:'Change the search or filter.',faal:'ACTIVE',inactive:'INACTIVE',destination:'DESTINATION',moon:'MOON',mars:'MARS',crew:'MOONWALKERS',landing:'LANDING SITE',missionResult:'MISSION RESULT',landed:'LANDED',mission:'MISSION',missionType:'LUNAR CREW'}
+    tr:{archive:'ARŞİV',viewOrientation:'GÖRÜŞ YÖNÜ',dataVia:'VERİ KAYNAĞI',coordinateNote:'KOORDİNATLAR KAYNAKTAKİ KESİNLİKLE SUNULUR',search:'Görev veya araç ara',records:'KAYITLAR',selected:'SEÇİLİ KAYIT',year:'GÖREV YILI',status:'GÖREV DURUMU',coords:'ENLEM / BOYLAM',type:'KAYIT TÜRÜ',confidence:'KONUM GÜVENİ',source:'KAYNAĞI AÇ',noResults:'Eşleşen kayıt yok',noResultsHint:'Aramayı veya filtreyi değiştir.',faal:'FAAL',inactive:'FAAL DEĞİL',destination:'HEDEF',moon:'AY',mars:'MARS',crew:'AY YÜZEYİNDE YÜRÜYENLER',landing:'İNİŞ SAHASI',missionResult:'GÖREV SONUCU',landed:'AY’A İNİŞ',mission:'GÖREV',missionType:'AY GÖREVİ',mapHide:'HARİTAYI GİZLE',mapShow:'HARİTAYI GÖSTER',feature:'YÜZEY ÖZELLİĞİ',featureSource:'NASA / USGS KAYNAĞI',modelLoading:'NASA 3D MODELİ YÜKLENİYOR'},
+    en:{archive:'ARCHIVE',viewOrientation:'VIEW ORIENTATION',dataVia:'DATA VIA',coordinateNote:'COORDINATES SHOWN AT SOURCE CONFIDENCE',search:'Search missions or equipment',records:'RECORDS',selected:'SELECTED RECORD',year:'MISSION YEAR',status:'MISSION STATUS',coords:'LATITUDE / LONGITUDE',type:'RECORD TYPE',confidence:'LOCATION CONFIDENCE',source:'OPEN SOURCE',noResults:'No matching records',noResultsHint:'Change the search or filter.',faal:'ACTIVE',inactive:'INACTIVE',destination:'DESTINATION',moon:'MOON',mars:'MARS',crew:'MOONWALKERS',landing:'LANDING SITE',missionResult:'MISSION RESULT',landed:'LANDED',mission:'MISSION',missionType:'LUNAR CREW',mapHide:'HIDE MAP',mapShow:'SHOW MAP',feature:'SURFACE FEATURE',featureSource:'NASA / USGS SOURCE',modelLoading:'LOADING NASA 3D MODEL'}
   };
   let language=localStorage.getItem('oa-language-v2')==='tr'?'tr':'en';
   const tr = key => i18n[language][key] || i18n.tr[key] || key;
   const modelViewerSrc='https://ajax.googleapis.com/ajax/libs/model-viewer/4.1.0/model-viewer.min.js';
   let modelViewerPromise=null;
   const normalizeLon = lon => ((lon + 180) % 360 + 360) % 360 - 180;
-  let world = 'moon', filter = 'all', selected = null, map = null, drag = null;
+  let world = 'moon', filter = 'all', selected = null, selectedFeature = null, map = null, drag = null, mapHidden = false;
   const list = $('#record-list');
   function applyLanguage() {
     document.documentElement.lang=language;
@@ -38,6 +44,7 @@
     if(labels[1]&&labels[1].firstChild)labels[1].childNodes[0].textContent=`${tr('records')} `;
     const detail=$('.detail-head .section-label');if(detail)detail.textContent=tr('selected');
     const mini=$('.detail-bottom .mini-label');if(mini)mini.textContent=tr('confidence');
+    $('#map-toggle').textContent=tr(mapHidden?'mapShow':'mapHide');
     const source=$('#primary-source');if(source)source.firstChild.textContent=`${tr('source')} `;
     const meta=document.querySelectorAll('.meta-item small');
     [tr('year'),tr('status'),tr('coords'),tr('type')].forEach((value,index)=>{if(meta[index])meta[index].textContent=value;});
@@ -63,6 +70,7 @@
   function idMissionNumber(id){return String(id?.id??id??'').match(/^apollo-(\d+)/)?.[1]||'00';}
   function displayRegion(record){return language==='tr'?(record.regionTr||record.region):(record.regionEn||record.region.replace('Çarpma yeri belirlenmedi','Impact site undetermined').replace('kesin konum bilinmiyor','exact location unknown').replace('Kesin konum bilinmiyor','Exact location unknown').replace('tahmini çarpma','estimated impact').replace('belirsiz alan','uncertain area'));}
   function displayCoordinates(record){return language==='tr'?(record.coordsTr||record.coords):(record.coordsEn||record.coords.replaceAll('° K','° N').replaceAll('° G','° S').replaceAll('° D','° E').replaceAll('° B','° W').replace('Kesin konum bilinmiyor','Exact location unknown').replace('yaklaşık','approx.'));}
+  function displayFeatureName(feature){return language==='tr'?(feature.nameTr||feature.name):feature.name;}
   function displayStory(record){
     if(language==='tr')return record.storyTr||record.story;
     if(record.storyEn)return record.storyEn;
@@ -76,6 +84,8 @@
   }
 
   function renderDetail(record) {
+    selectedFeature=null;
+    $('#detail-panel').classList.remove('feature-selected');
     if (!record) {
       $('#detail-content').innerHTML = `<div class="detail-hero"><div class="detail-title">${tr('noResults')}</div><p class="detail-desc">${tr('noResultsHint')}</p></div>`;
       $('#confidence-value').textContent = '—'; $('#confidence-text').textContent = '';
@@ -90,7 +100,9 @@
     const isCrew=record.type==='crew';
     const statusLabel = isCrew ? tr('landed') : record.status === 'active' ? tr('faal') : record.status === 'inactive' ? tr('inactive') : (language==='tr'?'DURUM BELİRSİZ':'STATUS UNKNOWN');
     const heroStory=displayStory(record),crewPanel=isCrew?`<section class="crew-panel"><small>${tr('crew')}</small><b>${record.crew}</b><span>${tr('landing')}: ${displayRegion(record)}</span></section>`:'';
-    $('#detail-content').innerHTML = `<div class="detail-hero"><div class="detail-kicker ${isCrew?'status-crew':record.status === 'active' ? 'status-active' : 'status-inactive'}">${type} · ${record.date} · ${statusLabel}</div><h2 class="detail-title">${displayName(record)}</h2><div class="detail-subtitle">${displayRegion(record).toUpperCase()}</div><p class="detail-desc">${heroStory}</p>${crewPanel}${note}</div><div id="record-media" class="record-media" data-record-id="${record.id}"></div><div class="meta-grid"><div class="meta-item"><small>${tr('year')}</small><b>${record.date}</b></div><div class="meta-item"><small>${isCrew?tr('missionResult'):tr('status')}</small><b class="status-text ${isCrew?'status-crew':record.status === 'active' ? 'status-active' : 'status-inactive'}">${statusLabel}</b></div><div class="meta-item"><small>${tr('coords')}</small><b>${displayCoordinates(record)}</b></div><div class="meta-item"><small>${tr('type')}</small><b>${recordType}</b></div></div>`;
+    const model=nasaModelFor(record),hero=`<div class="detail-hero"><div class="detail-kicker ${isCrew?'status-crew':record.status === 'active' ? 'status-active' : 'status-inactive'}">${type} · ${record.date} · ${statusLabel}</div><h2 class="detail-title">${displayName(record)}</h2><div class="detail-subtitle">${displayRegion(record).toUpperCase()}</div><p class="detail-desc">${heroStory}</p>${crewPanel}${note}</div>`,media=`<div id="record-media" class="record-media" data-record-id="${record.id}"></div>`;
+    const meta=`<div class="meta-grid"><div class="meta-item"><small>${tr('year')}</small><b>${record.date}</b></div><div class="meta-item"><small>${isCrew?tr('missionResult'):tr('status')}</small><b class="status-text ${isCrew?'status-crew':record.status === 'active' ? 'status-active' : 'status-inactive'}">${statusLabel}</b></div><div class="meta-item"><small>${tr('coords')}</small><b>${displayCoordinates(record)}</b></div><div class="meta-item"><small>${tr('type')}</small><b>${recordType}</b></div></div>`;
+    $('#detail-content').innerHTML = model ? `${media}${hero}${meta}` : `${hero}${media}${meta}`;
     $('#confidence-value').textContent = language==='tr'?(record.confidenceLabelTr||record.confidenceLabel):(record.confidence==='exact'?'HIGH CONFIDENCE':record.confidence==='site'?'SITE LEVEL':'UNKNOWN');
     $('#confidence-value').style.color = record.confidence === 'site' ? 'var(--amber)' : record.confidence === 'exact' ? 'var(--accent)' : '#9ba09e';
     $('#confidence-meter').className = record.confidence === 'site' ? 'site' : record.confidence === 'exact' ? '' : 'unknown';
@@ -100,9 +112,40 @@
     loadRecordMedia(record);
   }
 
+  function renderFeatureDetail(feature){
+    selectedFeature=feature;
+    $('#detail-panel').classList.add('feature-selected');
+    $('#detail-index').textContent=language==='tr'?'YÜZEY':'FEATURE';
+    const image=document.createElement('img');image.className='feature-image';image.alt=`${displayFeatureName(feature)} · NASA surface image`;
+    const imageCredit=document.createElement('small');imageCredit.className='feature-image-credit';imageCredit.textContent=feature.imageCredit||'NASA GLOBAL SURFACE ATLAS';
+    const fallback=()=>{
+      const source=map?.surfaceImage;if(!source)return;
+      const canvas=document.createElement('canvas');canvas.className='feature-image';canvas.width=720;canvas.height=405;
+      const ctx=canvas.getContext('2d');if(!ctx)return;
+      const sw=source.naturalWidth*24/360,sh=source.naturalHeight*13.5/180;
+      const cx=(feature.lon+180)/360*source.naturalWidth,cy=(90-feature.lat)/180*source.naturalHeight;
+      const sx=Math.max(0,Math.min(source.naturalWidth-sw,cx-sw/2)),sy=Math.max(0,Math.min(source.naturalHeight-sh,cy-sh/2));
+      ctx.drawImage(source,sx,sy,sw,sh,0,0,canvas.width,canvas.height);image.replaceWith(canvas);imageCredit.textContent='NASA GLOBAL SURFACE ATLAS · FEATURE AREA';
+    };
+    if(feature.image){image.src=feature.image;image.addEventListener('error',fallback,{once:true});}
+    const card=document.createElement('article');card.className='feature-card';
+    const kicker=document.createElement('div');kicker.className='detail-kicker';kicker.textContent=tr('feature');
+    const title=document.createElement('h2');title.className='detail-title';title.textContent=displayFeatureName(feature);
+    const story=document.createElement('p');story.className='detail-desc';story.textContent=language==='tr'?feature.factTr:feature.factEn;
+    const imageWrap=document.createElement('figure');imageWrap.className='feature-image-wrap';imageWrap.append(image,imageCredit);
+    const coordinate=document.createElement('div');coordinate.className='feature-coordinates';coordinate.textContent=`${feature.lat.toFixed(2)}° ${feature.lat>=0?'N':'S'} · ${Math.abs(feature.lon).toFixed(2)}° ${feature.lon>=0?'E':'W'}`;
+    card.append(kicker,imageWrap,title,story,coordinate);$('#detail-content').replaceChildren(card);
+    if(!feature.image)fallback();
+    $('#confidence-value').textContent=language==='tr'?'İSİMLİ YÜZEY':'NAMED FEATURE';
+    $('#confidence-meter').className='unknown';$('#confidence-text').textContent=language==='tr'?'Koordinat, adlandırılmış yüzey özelliğinin yaklaşık merkezidir.':'Coordinates mark the approximate center of this named surface feature.';
+    $('#primary-source').href=feature.source;$('#primary-source').setAttribute('aria-label',`${feature.sourceLabel}: ${language==='tr'?'kaynağı aç':'open source'}`);
+    $('#primary-source').firstChild.textContent=`${language==='tr'?'KAYNAĞI AÇ':'OPEN SOURCE'} `;
+  }
+
   function nasaModelFor(record) {
-    if(record.id==='curiosity') return {name:'Curiosity Rover',credit:'NASA/JPL-Caltech',page:'https://science.nasa.gov/resource/curiosity-rover-3d-model/'};
-    if(record.id==='spirit'||record.id==='opportunity') return {name:`${displayName(record)} Rover`,credit:'NASA/JPL-Caltech',page:'https://science.nasa.gov/resource/spirit-and-opportunity-rover-3d-model/'};
+    if(record.id==='curiosity') return {name:'Curiosity Rover',credit:'NASA/JPL-Caltech',page:'https://science.nasa.gov/resource/curiosity-rover-3d-model/',embed:'https://mars.nasa.gov/gltf_embed/24584'};
+    if(record.id==='spirit') return {name:'Spirit Rover',credit:'NASA/JPL-Caltech',page:'https://science.nasa.gov/resource/spirit-and-opportunity-rover-3d-model/',embed:'https://mars.nasa.gov/gltf_embed/24883'};
+    if(record.id==='opportunity') return {name:'Opportunity Rover',credit:'NASA/Ames Research Center',page:'https://science.nasa.gov/3d-resources/mars-exploration-rover-opportunity-mer-b/',src:'https://assets.science.nasa.gov/content/dam/science/cds/3d/resources/model/mars-exploration-rover---opportunity-%28mer-b%29/Mars%20Exploration%20Rover%20-%20Opportunity%20%28MER-B%29.glb'};
     if(record.id==='perseverance') return {name:'Perseverance Rover',credit:'NASA/JPL',page:'https://science.nasa.gov/3d-resources/mars-2020-perseverance-rover/',src:'https://assets.science.nasa.gov/content/dam/science/cds/3d/resources/model/mars-2020-perseverance-rover/Mars%202020%20Perseverance%20Rover.glb'};
     if(record.id==='insight') return {name:'InSight Lander',credit:'NASA/VTAD',page:'https://science.nasa.gov/3d-resources/insight-cruise-lander/',src:'https://assets.science.nasa.gov/content/dam/science/cds/3d/resources/model/insight-cruise-lander/InSight%20Cruise%20Lander%20%28arm%20deployed%29.glb'};
     if(record.id==='ingenuity') return {name:'Ingenuity Helicopter',credit:'NASA/Brian E. Kumanchik',page:'https://science.nasa.gov/3d-resources/ingenuity-mars-helicopter/',src:'https://assets.science.nasa.gov/content/dam/science/cds/3d/resources/model/ingenuity-mars-helicopter/Ingenuity%20Mars%20Helicopter.glb'};
@@ -124,24 +167,24 @@
 
   function loadRecordMedia(record) {
     const host=$('#record-media');if(!host)return;
-    renderAtlasFallback(record,host);
     const model=nasaModelFor(record);
-    if(!model)return;
-    const sources=host.querySelector('.media-sources');
-    sources?.append(mediaSourceLink(model.page,`${language==='tr'?'NASA 3D modeli':'NASA 3D model'} · ${model.name}`));
-    if(!model.src)return;
-    const button=document.createElement('button');button.type='button';button.className='media-load-3d';button.textContent=language==='tr'?'3D MODELİ YÜKLE':'LOAD 3D MODEL';
-    button.addEventListener('click',async()=>{
-      button.disabled=true;button.textContent=language==='tr'?'MODEL YÜKLENİYOR…':'LOADING MODEL…';
+    if(!model){renderAtlasFallback(record,host);return;}
+    const sources=document.createElement('div');sources.className='media-sources';
+    sources.append(mediaSourceLink(model.page,`${language==='tr'?'NASA 3D modeli':'NASA 3D model'} · ${model.name}`));
+    const credit=document.createElement('span');credit.className='media-attribution';credit.textContent=model.credit;sources.append(credit);
+    const stage=document.createElement('div');stage.className='model-stage';stage.textContent=tr('modelLoading');
+    host.replaceChildren(stage,sources);
+    if(model.embed){
+      const frame=document.createElement('iframe');frame.className='record-model-frame';frame.src=model.embed;frame.title=`${model.name} · NASA interactive 3D model`;frame.loading='eager';frame.allow='fullscreen';frame.referrerPolicy='strict-origin-when-cross-origin';
+      frame.addEventListener('error',()=>renderAtlasFallback(record,host),{once:true});stage.replaceWith(frame);return;
+    }
+    (async()=>{
       try{
         await ensureModelViewer();if($('#record-media')!==host||host.dataset.recordId!==record.id)return;
-        const viewer=document.createElement('model-viewer');viewer.setAttribute('src',model.src);viewer.setAttribute('alt',model.name);viewer.setAttribute('camera-controls','');viewer.setAttribute('loading','lazy');viewer.setAttribute('shadow-intensity','0');viewer.setAttribute('exposure','1');viewer.className='record-model';
-        host.querySelector('.record-photo')?.replaceWith(viewer);
-        viewer.addEventListener('error',()=>{viewer.replaceWith(createAtlasFigure(record));button.disabled=false;button.textContent=language==='tr'?'3D MODELİ YENİDEN DENE':'RETRY 3D MODEL';},{once:true});
-        viewer.addEventListener('load',()=>{button.textContent=language==='tr'?'MODELİ SÜRÜKLEYEREK DÖNDÜR':'DRAG TO ROTATE MODEL';},{once:true});
-      }catch{button.disabled=false;button.textContent=language==='tr'?'3D MODEL AÇILAMADI · YENİDEN DENE':'MODEL UNAVAILABLE · RETRY';}
-    });
-    sources?.append(button);
+        const viewer=document.createElement('model-viewer');viewer.setAttribute('src',model.src);viewer.setAttribute('alt',model.name);viewer.setAttribute('camera-controls','');viewer.setAttribute('loading','eager');viewer.setAttribute('shadow-intensity','0');viewer.setAttribute('exposure','1');viewer.setAttribute('interaction-prompt','none');viewer.className='record-model';
+        viewer.addEventListener('error',()=>renderAtlasFallback(record,host),{once:true});stage.replaceWith(viewer);
+      }catch{if($('#record-media')===host&&host.dataset.recordId===record.id)renderAtlasFallback(record,host);}
+    })();
   }
 
   function mediaSourceLink(url,label){
@@ -686,7 +729,9 @@
         if(!position.visible || position.x < 8 || position.x > this.canvas.clientWidth-8 || position.y < 8 || position.y > this.canvas.clientHeight-8) continue;
         visibleNames.add(feature.name);
         let label=this.labelNodes.get(feature.name);
-        if(!label) { label=document.createElement('span'); label.className='planet-label'; label.textContent=feature.name; this.labelNodes.set(feature.name,label); this.labelLayer.append(label); }
+        if(!label) { label=document.createElement('button'); label.type='button';label.className='planet-label';label.addEventListener('click',event=>{event.stopPropagation();renderFeatureDetail(feature);});this.labelNodes.set(feature.name,label); this.labelLayer.append(label); }
+        label.textContent=displayFeatureName(feature);label.title=language==='tr'?'Bilgi kartını aç':'Open feature information';label.setAttribute('aria-label',`${displayFeatureName(feature)} — ${language==='tr'?'bilgi kartını aç':'open information card'}`);
+        label.classList.toggle('selected',selectedFeature?.name===feature.name);
         label.style.left=`${position.x}px`; label.style.top=`${position.y}px`; label.style.opacity=String(opacity);
       }
       this.labelNodes.forEach((node,name)=>{ if(!visibleNames.has(name)) { node.remove(); this.labelNodes.delete(name); } });
@@ -769,8 +814,9 @@
   }
 
   document.querySelectorAll('.world-option,.quick-world').forEach(button => button.addEventListener('click', () => setWorld(button.dataset.world)));
+  $('#map-toggle').addEventListener('click',()=>{mapHidden=!mapHidden;$('.workspace').classList.toggle('map-hidden',mapHidden);$('#map-toggle').textContent=tr(mapHidden?'mapShow':'mapHide');$('#map-toggle').setAttribute('aria-pressed',String(mapHidden));map?.draw();});
   $('#archive-toggle').addEventListener('click',()=>{const open=$('#archive-drawer').classList.toggle('open');$('#archive-toggle').setAttribute('aria-expanded',String(open));});
-  $('#language-toggle').addEventListener('click',()=>{language=language==='tr'?'en':'tr';localStorage.setItem('oa-language-v2',language);applyLanguage();renderList();});
+  $('#language-toggle').addEventListener('click',()=>{const feature=selectedFeature;language=language==='tr'?'en':'tr';localStorage.setItem('oa-language-v2',language);applyLanguage();renderList();if(feature)renderFeatureDetail(feature);map?.draw();});
   document.querySelectorAll('.filter').forEach(button => button.addEventListener('click', () => {
     filter = button.dataset.filter;
     document.querySelectorAll('.filter').forEach(item => item.classList.toggle('active', item === button));

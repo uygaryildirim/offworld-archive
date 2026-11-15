@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0a0c0e" />
   <meta name="description" content="An interactive archive of NASA equipment and mission traces left on the Moon and Mars." />
   <title>Offworld Archive — Surface Records</title>
-  <link rel="stylesheet" href="./styles.css?v=20261115-15" />
+  <link rel="stylesheet" href="./styles.css?v=20261115-16" />
 </head>
 <body>
   <div class="app-shell">
@@ -47,7 +47,7 @@
         </section>
 
         <aside class="detail-panel" id="detail-panel">
-          <div class="detail-head"><span class="section-label" data-i18n="selected">SELECTED RECORD</span><span id="detail-index">01 / 04</span></div>
+          <div class="detail-head"><span class="section-label" data-i18n="selected">SELECTED RECORD</span><div class="detail-head-actions"><span id="detail-index">01 / 04</span><button id="map-toggle" type="button" aria-pressed="false">HIDE MAP</button></div></div>
           <div id="detail-content"></div>
           <div class="mini-planet-card" id="orientation-card"><div class="mini-planet-head"><span data-i18n="viewOrientation">VIEW ORIENTATION</span><span id="mini-world-label">MOON / EQ</span></div><div class="orientation-wrap"><canvas id="orientation-globe" width="112" height="112" aria-label="View direction on the globe"></canvas><div class="orientation-data"><b id="orientation-coord">0.0° · 0.0°</b><small id="orientation-zoom">ZOOM IN</small></div></div><div class="mini-planet-foot"><span id="mini-planet-count">07 SITES</span><span>NASA DEM</span></div></div>
           <div class="detail-bottom"><div class="mini-label" data-i18n="confidence">LOCATION CONFIDENCE</div><div class="confidence-row"><span id="confidence-value">HIGH</span><div class="confidence-meter"><i id="confidence-meter"></i></div></div><p id="confidence-text"></p>
@@ -69,6 +69,6 @@
   <script src="./data.js?v=20261115-1"></script>
   <script src="./assets/stars.js?v=20261114-1"></script>
   <script src="./assets/space-ephemeris.js?v=20261114-1"></script>
-  <script src="./app.js?v=20261115-15" defer></script>
+  <script src="./app.js?v=20261115-16" defer></script>
 </body>
 </html>
