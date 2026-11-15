@@ -159,6 +159,14 @@
     return `${record.name} ${world==='moon'?'Moon':'Mars'} NASA spacecraft`;
   }
 
+  function nasaImageQueries(record) {
+    const primary=nasaImageQuery(record),apollo=record.id.match(/^apollo-(\d+)/)?.[1],worldName=world==='moon'?'Moon':'Mars';
+    const fallbacks=apollo
+      ? [`Apollo ${apollo} lunar surface NASA`, `Apollo ${apollo} ${record.type==='crew'?'astronauts Moonwalk':record.type==='rover'?'lunar rover':'Moon mission'} NASA`]
+      : [`${record.name} NASA ${worldName} mission`, `${worldName} ${record.type} ${record.name} NASA`];
+    return [...new Set([primary,...fallbacks])];
+  }
+
   function ensureModelViewer() {
     if(customElements.get('model-viewer')) return Promise.resolve();
     if(modelViewerPromise) return modelViewerPromise;
@@ -172,24 +180,34 @@
   }
 
   async function findNasaImage(record) {
-    const query=nasaImageQuery(record);
-    if(mediaCache.has(query)) return mediaCache.get(query);
+    const queries=nasaImageQueries(record),cacheKey=queries.join(' · ');
+    if(mediaCache.has(cacheKey)) return mediaCache.get(cacheKey);
     const promise=(async()=>{
-      const url=`https://images-api.nasa.gov/search?${new URLSearchParams({q:query,media_type:'image',page_size:'8'})}`;
-      const response=await fetch(url,{headers:{Accept:'application/json'}});
-      if(!response.ok) throw new Error('NASA image search unavailable');
-      const json=await response.json(),items=json.collection?.items||[];
-      const terms=query.toLowerCase().split(/[^a-z0-9]+/).filter(word=>word.length>2&&!['nasa','moon','mars','rover','spacecraft','lander','surface'].includes(word));
-      items.sort((a,b)=>{
-        const title=item=>(item.data?.[0]?.title||'').toLowerCase();
-        return terms.reduce((n,t)=>n+(title(b).includes(t)?1:0),0)-terms.reduce((n,t)=>n+(title(a).includes(t)?1:0),0);
-      });
-      const item=items.find(entry=>entry.links?.some(link=>link.rel==='preview'&&/^https:\/\//.test(link.href)));
-      if(!item) return null;
-      const data=item.data?.[0]||{},preview=item.links.find(link=>link.rel==='preview');
-      return {url:preview.href,title:data.title||record.name,credit:data.center||'NASA Image and Video Library',page:`https://images.nasa.gov/details/${encodeURIComponent(data.nasa_id||'')}`};
+      const candidates=new Map();
+      for(const query of queries){
+        try{
+          const url=`https://images-api.nasa.gov/search?${new URLSearchParams({q:query,media_type:'image',page_size:'8'})}`;
+          const response=await fetch(url,{headers:{Accept:'application/json'}});
+          if(!response.ok)continue;
+          const json=await response.json(),items=json.collection?.items||[];
+          const terms=query.toLowerCase().split(/[^a-z0-9]+/).filter(word=>word.length>2&&!['nasa','moon','mars','rover','spacecraft','lander','surface','mission'].includes(word));
+          const searchable=item=>`${item.data?.[0]?.title||''} ${item.data?.[0]?.description||''} ${(item.data?.[0]?.keywords||[]).join(' ')}`.toLowerCase();
+          items.sort((a,b)=>terms.reduce((n,t)=>n+(searchable(b).includes(t)?1:0),0)-terms.reduce((n,t)=>n+(searchable(a).includes(t)?1:0),0));
+          for(const item of items){
+            const preview=item.links?.find(link=>link.rel==='preview'&&/^https:\/\//.test(link.href));
+            if(!preview||candidates.has(preview.href))continue;
+            const data=item.data?.[0]||{};
+            candidates.set(preview.href,{url:preview.href,title:data.title||record.name,credit:data.center||'NASA Image and Video Library',page:`https://images.nasa.gov/details/${encodeURIComponent(data.nasa_id||'')}`});
+            if(candidates.size>=12)break;
+          }
+          if(candidates.size>=8)break;
+        }catch(error){console.warn('NASA image search query failed',query,error);}
+      }
+      return [...candidates.values()];
     })();
-    mediaCache.set(query,promise);return promise;
+    mediaCache.set(cacheKey,promise);
+    try{const result=await promise;if(!result.length)mediaCache.delete(cacheKey);return result;}
+    catch(error){mediaCache.delete(cacheKey);throw error;}
   }
 
   async function loadRecordMedia(record) {
@@ -215,16 +233,30 @@
 
   async function loadRecordImage(record,host) {
     try{
-      const image=await findNasaImage(record);if(!image||$('#record-media')!==host||host.dataset.recordId!==record.id)throw new Error('No matching NASA image');
+      const images=await findNasaImage(record);if($('#record-media')!==host||host.dataset.recordId!==record.id) return;
+      let image=null;
+      const probes=await Promise.all(images.slice(0,6).map(candidate=>new Promise(resolve=>{const probe=new Image();const timer=setTimeout(()=>resolve(false),3500);probe.onload=()=>{clearTimeout(timer);resolve(true);};probe.onerror=()=>{clearTimeout(timer);resolve(false);};probe.src=candidate.url;})));
+      image=images.find((_,index)=>probes[index]);
+      if(!image)throw new Error('No loadable NASA image found after mission-specific searches');
+      if($('#record-media')!==host||host.dataset.recordId!==record.id)return;
       const figure=document.createElement('a');figure.className='record-photo';figure.href=image.page;figure.target='_blank';figure.rel='noreferrer';
       const img=document.createElement('img');img.src=image.url;img.alt=image.title;img.loading='lazy';img.decoding='async';
       const title=document.createElement('span');title.className='record-photo-title';title.textContent=image.title;
       figure.append(img,title);host.replaceChildren(figure,mediaCredit(image.credit,image.page,image.title));
     }catch{
       if($('#record-media')!==host||host.dataset.recordId!==record.id)return;
-      const fallback=document.createElement('div');fallback.className='media-fallback';fallback.textContent=language==='tr'?'NASA arşiv görseli şu an yüklenemedi. Kaynak bağlantısını kullan.':'NASA image is unavailable right now. Open the source link below.';
-      host.replaceChildren(fallback);
+      renderAtlasFallback(record,host);
     }
+  }
+
+  function renderAtlasFallback(record,host){
+    const body=records.moon.includes(record)?'moon':'mars',label=body==='moon'?'LRO WAC GLOBAL MOSAIC':'VIKING GLOBAL MOSAIC';
+    const figure=document.createElement('div');figure.className='record-photo record-photo-context';
+    const img=document.createElement('img');img.src=`./assets/maps/${body}-color.jpg`;img.alt=`NASA ${label.toLowerCase()} showing the mission region`;img.loading='lazy';img.decoding='async';
+    const title=document.createElement('span');title.className='record-photo-title';title.textContent=`${label} · ${displayRegion(record).toUpperCase()} · ${language==='tr'?'GÖREV BÖLGESİ':'MISSION REGION'}`;
+    figure.append(img,title);
+    const credit=mediaCredit(body==='moon'?'NASA LRO WAC':'NASA Viking Orbiter',`https://trek.nasa.gov/${body}/`,language==='tr'?'YÜZEY ATLASI · BÖLGE BAĞLAMI':'SURFACE ATLAS · REGIONAL CONTEXT');
+    host.replaceChildren(figure,credit);
   }
 
   function renderList() {
@@ -308,11 +340,11 @@
       const albedo=imagePixels(surface),dem=imagePixels(elevation);
       cards.forEach((card,index)=>paintDottedMoon(card.querySelector('canvas'),fractions[index],albedo,dem));
     }catch(error){console.warn('Dotted Moon artwork could not load',error);}
-    boot.classList.add('phase-ready');setActive(3);await new Promise(resolve=>setTimeout(resolve,180));
+    boot.classList.add('phase-ready');setActive(3);await new Promise(resolve=>setTimeout(resolve,130));
     const journey=[2,1,0,1,2,3,4,5,6];
-    for(const index of journey){setActive(index);await new Promise(resolve=>setTimeout(resolve,155));}
-    boot.classList.add('show-gallery');$('#phase-current').textContent='ARCHIVE SIGNAL · ACQUIRED';await new Promise(resolve=>setTimeout(resolve,720));
-    boot.classList.add('return-to-center');setActive(3);await new Promise(resolve=>setTimeout(resolve,340));
+    for(const index of journey){setActive(index);await new Promise(resolve=>setTimeout(resolve,105));}
+    boot.classList.add('show-gallery');$('#phase-current').textContent='ARCHIVE SIGNAL · ACQUIRED';await new Promise(resolve=>setTimeout(resolve,520));
+    boot.classList.add('return-to-center');setActive(3);await new Promise(resolve=>setTimeout(resolve,250));
   }
 
   class SiteMeshMap {
@@ -410,10 +442,12 @@
           vec3 detailed=texture2D(u_detail,detailUV).rgb;
           float detailAmount=u_detail_ready*inDetail;
           surface=mix(surface,detailed,detailAmount);
-          float contourMix=smoothstep(.95,4.2,u_zoom);
+          // Bring the archival contour layer in sooner so the base imagery
+          // gives way before users reach the coarse edge of the global mesh.
+          float contourMix=smoothstep(.72,2.25,u_zoom);
           float topoStrength=mix(.94,.88,u_theme);
           vec3 color=mix(surface,topoColor,contourMix*topoStrength);
-          color=mix(color,detailed,detailAmount*contourMix*.38);
+          color=mix(color,detailed,detailAmount*contourMix*.12);
           gl_FragColor = vec4(color, 1.0);
         }`;
       const gl = this.gl, program = gl.createProgram();
@@ -507,7 +541,7 @@
     }
 
     makeGrid() {
-      const columns = 720, rows = 360, bandRows = 80;
+      const columns = 960, rows = 480, bandRows = 64;
       const gl = this.gl;
       this.meshBands?.forEach(band => { gl.deleteBuffer(band.vertex); gl.deleteBuffer(band.index); });
       this.meshBands = [];
