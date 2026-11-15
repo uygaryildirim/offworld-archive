@@ -19,10 +19,10 @@
   };
   const $ = selector => document.querySelector(selector);
   const i18n = {
-    tr:{archive:'ARŞİV',viewOrientation:'GÖRÜŞ YÖNÜ',dataVia:'VERİ KAYNAĞI',coordinateNote:'KOORDİNATLAR KAYNAKTAKİ KESİNLİKLE SUNULUR',search:'Araç veya görev ara',records:'KAYITLAR',selected:'SEÇİLİ KAYIT',year:'GÖREV YILI',status:'ÇALIŞMA DURUMU',coords:'ENLEM / BOYLAM',type:'KAYIT TÜRÜ',confidence:'KONUM GÜVENİ',source:'KAYNAĞI AÇ',noResults:'Eşleşen kayıt yok',noResultsHint:'Aramayı veya filtreyi değiştir.',faal:'FAAL',inactive:'FAAL DEĞİL'},
-    en:{archive:'ARCHIVE',viewOrientation:'VIEW ORIENTATION',dataVia:'DATA VIA',coordinateNote:'COORDINATES SHOWN AT SOURCE CONFIDENCE',search:'Search mission or vehicle',records:'RECORDS',selected:'SELECTED RECORD',year:'MISSION YEAR',status:'MISSION STATUS',coords:'LATITUDE / LONGITUDE',type:'RECORD TYPE',confidence:'LOCATION CONFIDENCE',source:'OPEN SOURCE',noResults:'No matching records',noResultsHint:'Change the search or filter.',faal:'ACTIVE',inactive:'INACTIVE'}
+    tr:{archive:'ARŞİV',viewOrientation:'GÖRÜŞ YÖNÜ',dataVia:'VERİ KAYNAĞI',coordinateNote:'KOORDİNATLAR KAYNAKTAKİ KESİNLİKLE SUNULUR',search:'Görev veya araç ara',records:'KAYITLAR',selected:'SEÇİLİ KAYIT',year:'GÖREV YILI',status:'GÖREV DURUMU',coords:'ENLEM / BOYLAM',type:'KAYIT TÜRÜ',confidence:'KONUM GÜVENİ',source:'KAYNAĞI AÇ',noResults:'Eşleşen kayıt yok',noResultsHint:'Aramayı veya filtreyi değiştir.',faal:'FAAL',inactive:'FAAL DEĞİL',destination:'HEDEF',moon:'AY',mars:'MARS',crew:'AY YÜZEYİNDE YÜRÜYENLER',landing:'İNİŞ SAHASI',missionResult:'GÖREV SONUCU',landed:'AY’A İNİŞ',mission:'GÖREV',missionType:'AY GÖREVİ'},
+    en:{archive:'ARCHIVE',viewOrientation:'VIEW ORIENTATION',dataVia:'DATA VIA',coordinateNote:'COORDINATES SHOWN AT SOURCE CONFIDENCE',search:'Search missions or equipment',records:'RECORDS',selected:'SELECTED RECORD',year:'MISSION YEAR',status:'MISSION STATUS',coords:'LATITUDE / LONGITUDE',type:'RECORD TYPE',confidence:'LOCATION CONFIDENCE',source:'OPEN SOURCE',noResults:'No matching records',noResultsHint:'Change the search or filter.',faal:'ACTIVE',inactive:'INACTIVE',destination:'DESTINATION',moon:'MOON',mars:'MARS',crew:'MOONWALKERS',landing:'LANDING SITE',missionResult:'MISSION RESULT',landed:'LANDED',mission:'MISSION',missionType:'LUNAR CREW'}
   };
-  let language=localStorage.getItem('oa-language')==='en'?'en':'tr';
+  let language=localStorage.getItem('oa-language-v2')==='tr'?'tr':'en';
   const tr = key => i18n[language][key] || i18n.tr[key] || key;
   const modelViewerSrc='https://ajax.googleapis.com/ajax/libs/model-viewer/4.1.0/model-viewer.min.js';
   const mediaCache=new Map();
@@ -32,6 +32,7 @@
   const list = $('#record-list');
   function applyLanguage() {
     document.documentElement.lang=language;
+    $('#boot-screen').setAttribute('aria-label',language==='tr'?'Offworld Archive yükleniyor':'Loading Offworld Archive');
     $('#language-toggle').innerHTML=language==='tr'?'TR <i>/</i> EN':'EN <i>/</i> TR';
     document.querySelectorAll('[data-i18n]').forEach(node=>node.textContent=tr(node.dataset.i18n));
     $('#search').placeholder=tr('search');
@@ -43,14 +44,58 @@
     const meta=document.querySelectorAll('.meta-item small');
     [tr('year'),tr('status'),tr('coords'),tr('type')].forEach((value,index)=>{if(meta[index])meta[index].textContent=value;});
     document.querySelectorAll('.world-quick-switch .quick-world').forEach((button,index)=>button.textContent=language==='tr'?(index===0?'AY':'MARS'):(index===0?'MOON':'MARS'));
+    document.querySelectorAll('.world-option').forEach(button=>{const key=button.dataset.world;button.querySelector('b').textContent=tr(key);button.querySelector('small').textContent=`${key.toUpperCase()} · ${String(records[key].length).padStart(2,'0')} ${language==='tr'?'KAYIT':'RECORDS'}`;});
     const sourceTitle=worlds[world];$('#map-title').textContent=language==='tr'?(world==='moon'?'AY YÜZEYİ · YÜKSELTİ ATLASI':'MARS YÜZEYİ · YÜKSELTİ ATLASI'):sourceTitle.title;
-    document.querySelectorAll('.filter').forEach(button=>{const labels=language==='tr'?{all:'Tümü',mobile:'Hareketli',lander:'Lander'}:{all:'All',mobile:'Mobile',lander:'Lander'};button.textContent=labels[button.dataset.filter];});
+    $('#map-status b').textContent=language==='tr'?'NASA GÖREV KÜRESİ HAZIRLANIYOR':'PREPARING NASA SURFACE GLOBE';
+    $('#map-status p').textContent=language==='tr'?'Gerçek yüzey görüntüsü ve yükselti çizgileri yükleniyor.':'Loading real surface imagery and elevation contours.';
+    document.querySelectorAll('.filter').forEach(button=>{const labels=language==='tr'?{all:'Tümü',mobile:'Hareketli',lander:'İniş aracı'}:{all:'All',mobile:'Mobile',lander:'Landers'};button.textContent=labels[button.dataset.filter];});
+    $('#archive-drawer').setAttribute('aria-label',language==='tr'?'Görev arşivi':'Mission archive');
+    $('#map').setAttribute('aria-label',language==='tr'?'NASA yüzey verisiyle etkileşimli Ay veya Mars küresi':'Interactive Moon or Mars globe with NASA surface data');
+    $('#mesh-pins').setAttribute('aria-label',language==='tr'?'Görev ve Apollo iniş sahaları':'Mission and Apollo landing sites');
+    $('#zoom-out').setAttribute('aria-label',language==='tr'?'Uzaklaş':'Zoom out');$('#zoom-in').setAttribute('aria-label',language==='tr'?'Yakınlaş':'Zoom in');$('#reset-view').setAttribute('aria-label',language==='tr'?'Görünümü sıfırla':'Reset view');
+    $('.mini-label').textContent=tr('confidence');
+    $('.footer-brand small').textContent=`· ${language==='tr'?'NASA SPACE APPS CHALLENGE 2026':'NASA SPACE APPS CHALLENGE 2026'}`;
+  }
+
+  function displayName(record){
+    if(language==='tr')return record.nameTr||record.name;
+    if(record.nameEn)return record.nameEn;
+    return record.name.replace(/İniş aşaması|iniş aşaması/g,'Descent Stage').replace(/yükseliş aşaması/g,'Ascent Stage').replace(/ALSEP bilim paketi/g,'ALSEP Science Package').replace(/S-IVB roket aşaması/g,'S-IVB Rocket Stage').replace(/kütle spektrometresi kolu/g,'Mass Spectrometer Boom').replace(/son görev bölgesi/g,'Final Mission Region').replace(/sabit lander/g,'Stationary Lander').replace(/Ay yürüyüşü ekibi/g,'Moonwalkers');
+  }
+  function idMissionNumber(record){return record.id.match(/^apollo-(\d+)/)?.[1]||'00';}
+  function displayRegion(record){return language==='tr'?(record.regionTr||record.region):(record.regionEn||record.region.replace('Çarpma yeri belirlenmedi','Impact site undetermined').replace('kesin konum bilinmiyor','exact location unknown').replace('Kesin konum bilinmiyor','Exact location unknown').replace('tahmini çarpma','estimated impact').replace('belirsiz alan','uncertain area'));}
+  function displayCoordinates(record){return language==='tr'?(record.coordsTr||record.coords):(record.coordsEn||record.coords.replaceAll('° K','° N').replaceAll('° G','° S').replaceAll('° D','° E').replaceAll('° B','° W').replace('Kesin konum bilinmiyor','Exact location unknown').replace('yaklaşık','approx.'));}
+  function displayStory(record){
+    if(language==='tr')return record.storyTr||record.story;
+    if(record.storyEn)return record.storyEn;
+    if(record.id.startsWith('apollo-'))return 'This Apollo artifact marks a lasting trace of the mission. Open the linked NASA record for equipment and site details.';
+    return `This NASA mission record documents ${displayName(record)} at ${displayRegion(record)}. See the linked source for mission details and location evidence.`;
+  }
+  function buildLunarPhaseMarks(){
+    const svgNS='http://www.w3.org/2000/svg';
+    const sites=[{x:42,y:100},{x:91,y:59},{x:166,y:54},{x:220,y:88},{x:438,y:100},{x:389,y:141},{x:314,y:146},{x:260,y:112}];
+    const illumination=[.08,.2,.5,.8,.98,.8,.5,.2];
+    document.querySelectorAll('.lunar-phases').forEach(layer=>{
+      layer.replaceChildren();
+      sites.forEach((site,index)=>{
+        const group=document.createElementNS(svgNS,'g');group.setAttribute('class','lunar-phase');group.style.setProperty('--phase-index',index);
+        const glow=document.createElementNS(svgNS,'circle');glow.setAttribute('class','phase-glow');glow.setAttribute('cx',site.x);glow.setAttribute('cy',site.y);glow.setAttribute('r','12');group.append(glow);
+        for(let dy=-10;dy<=10;dy+=2.4)for(let dx=-10;dx<=10;dx+=2.4){
+          const radial=(dx*dx+dy*dy)/(10*10);if(radial>1)continue;
+          const edge=Math.sqrt(Math.max(0,1-(dy/10)**2));
+          const waxing=index>0&&index<4,waning=index>4&&index<8,edgeX=(1-2*illumination[index])*edge;
+          const lit=index===4||(waxing&&dx/10>edgeX)||(waning&&dx/10< -edgeX);
+          const dot=document.createElementNS(svgNS,'circle');dot.setAttribute('cx',(site.x+dx).toFixed(2));dot.setAttribute('cy',(site.y+dy).toFixed(2));dot.setAttribute('r',lit?(0.68+(1-radial)*.3).toFixed(2):'.57');dot.setAttribute('class',lit?'moon-dot moon-dot-lit':'moon-dot');group.append(dot);
+        }
+        layer.append(group);
+      });
+    });
   }
 
   function filteredRecords() {
     const query = $('#search').value.trim().toLocaleLowerCase('tr');
-    return records[world].filter(record => (filter === 'all' || (filter === 'mobile' ? record.type === 'rover' || record.type === 'aircraft' : record.type === filter))
-      && (!query || `${record.name} ${record.region} ${record.resource}`.toLocaleLowerCase('tr').includes(query)));
+    return records[world].filter(record => (filter === 'all' || (filter === 'mobile' ? record.type === 'rover' || record.type === 'aircraft' : filter==='lander' ? record.type==='lander'||record.type==='crew' : record.type === filter))
+      && (!query || `${record.name} ${record.nameTr||''} ${record.region} ${record.crew||''} ${record.resource}`.toLocaleLowerCase('tr').includes(query)));
   }
 
   function renderDetail(record) {
@@ -62,16 +107,17 @@
     const index = records[world].findIndex(item => item.id === record.id) + 1;
     $('#detail-index').textContent = `${String(index).padStart(2, '0')} / ${String(records[world].length).padStart(2, '0')}`;
     const mobile = record.type === 'rover' || record.type === 'aircraft';
-    const type = record.type === 'aircraft' ? (language==='tr'?'HAVA ARACI':'AIRCRAFT') : mobile ? (language==='tr'?'GEZGİN ARAÇ':'MOBILE VEHICLE') : record.type === 'impactor' ? (language==='tr'?'ÇARPMAYLA BIRAKILAN ARAÇ':'IMPACT / DESCENT HARDWARE') : (language==='tr'?'SABİT İNİŞ / YÜZEY DONANIMI':'STATIONARY LANDER / SURFACE EQUIPMENT');
+    const type = record.type === 'crew' ? tr('missionType') : record.type === 'aircraft' ? (language==='tr'?'HAVA ARACI':'AIRCRAFT') : mobile ? (language==='tr'?'GEZGİN ARAÇ':'MOBILE VEHICLE') : record.type === 'impactor' ? (language==='tr'?'ÇARPMAYLA BIRAKILAN ARAÇ':'IMPACT / DESCENT HARDWARE') : (language==='tr'?'SABİT İNİŞ / YÜZEY DONANIMI':'STATIONARY LANDER / SURFACE EQUIPMENT');
     const note = mobile ? `<p class="record-note">${language==='tr'?'Haritadaki pin görev bölgesini gösterir; aracın güncel veya son park konumunu göstermez.':'The map pin marks the mission site, not the vehicle’s current or final parked position.'}</p>` : '';
-    const recordType = record.type === 'aircraft' ? (language==='tr'?'Helikopter':'Aircraft') : record.type === 'rover' ? (language==='tr'?'Gezgin araç':'Rover') : record.type === 'impactor' ? (language==='tr'?'Çarpma / iniş artığı':'Impact / descent hardware') : (language==='tr'?'Lander / bilim donanımı':'Lander / science equipment');
-    const statusLabel = record.status === 'active' ? tr('faal') : record.status === 'inactive' ? tr('inactive') : (language==='tr'?'DURUM BELİRSİZ':'STATUS UNKNOWN');
-    const narrativeNote=language==='en'?'<p class="record-note">Mission narrative is currently preserved in Turkish.</p>':'';
-    $('#detail-content').innerHTML = `<div class="detail-hero"><div class="detail-kicker ${record.status === 'active' ? 'status-active' : 'status-inactive'}">${type} · ${record.date} · ${statusLabel}</div><h2 class="detail-title">${record.name}</h2><div class="detail-subtitle">${record.region.toUpperCase()}</div><p class="detail-desc">${record.story}</p>${narrativeNote}${note}</div><div id="record-media" class="record-media" data-record-id="${record.id}"><div class="media-loading"><i></i><span>${language==='tr'?'NASA arşivi aranıyor':'Searching NASA archive'}</span></div></div><div class="meta-grid"><div class="meta-item"><small>${tr('year')}</small><b>${record.date}</b></div><div class="meta-item"><small>${tr('status')}</small><b class="status-text ${record.status === 'active' ? 'status-active' : 'status-inactive'}">${statusLabel}</b></div><div class="meta-item"><small>${tr('coords')}</small><b>${record.coords}</b></div><div class="meta-item"><small>${tr('type')}</small><b>${recordType}</b></div></div>`;
-    $('#confidence-value').textContent = language==='tr'?record.confidenceLabel:(record.confidence==='exact'?'HIGH CONFIDENCE':record.confidence==='site'?'SITE LEVEL':'UNKNOWN');
+    const recordType = record.type==='crew'?tr('missionType'):record.type === 'aircraft' ? (language==='tr'?'Helikopter':'Aircraft') : record.type === 'rover' ? (language==='tr'?'Gezgin araç':'Rover') : record.type === 'impactor' ? (language==='tr'?'Çarpma / iniş artığı':'Impact / descent hardware') : (language==='tr'?'Lander / bilim donanımı':'Lander / science equipment');
+    const isCrew=record.type==='crew';
+    const statusLabel = isCrew ? tr('landed') : record.status === 'active' ? tr('faal') : record.status === 'inactive' ? tr('inactive') : (language==='tr'?'DURUM BELİRSİZ':'STATUS UNKNOWN');
+    const heroStory=displayStory(record),crewPanel=isCrew?`<section class="crew-panel"><small>${tr('crew')}</small><b>${record.crew}</b><span>${tr('landing')}: ${displayRegion(record)}</span></section>`:'';
+    $('#detail-content').innerHTML = `<div class="detail-hero"><div class="detail-kicker ${isCrew?'status-crew':record.status === 'active' ? 'status-active' : 'status-inactive'}">${type} · ${record.date} · ${statusLabel}</div><h2 class="detail-title">${displayName(record)}</h2><div class="detail-subtitle">${displayRegion(record).toUpperCase()}</div><p class="detail-desc">${heroStory}</p>${crewPanel}${note}</div><div id="record-media" class="record-media" data-record-id="${record.id}"><div class="media-loading"><i></i><span>${language==='tr'?'NASA arşivi aranıyor':'Searching NASA archive'}</span></div></div><div class="meta-grid"><div class="meta-item"><small>${tr('year')}</small><b>${record.date}</b></div><div class="meta-item"><small>${isCrew?tr('missionResult'):tr('status')}</small><b class="status-text ${isCrew?'status-crew':record.status === 'active' ? 'status-active' : 'status-inactive'}">${statusLabel}</b></div><div class="meta-item"><small>${tr('coords')}</small><b>${displayCoordinates(record)}</b></div><div class="meta-item"><small>${tr('type')}</small><b>${recordType}</b></div></div>`;
+    $('#confidence-value').textContent = language==='tr'?(record.confidenceLabelTr||record.confidenceLabel):(record.confidence==='exact'?'HIGH CONFIDENCE':record.confidence==='site'?'SITE LEVEL':'UNKNOWN');
     $('#confidence-value').style.color = record.confidence === 'site' ? 'var(--amber)' : record.confidence === 'exact' ? 'var(--accent)' : '#9ba09e';
     $('#confidence-meter').className = record.confidence === 'site' ? 'site' : record.confidence === 'exact' ? '' : 'unknown';
-    $('#confidence-text').textContent = language==='en'?'Coordinate confidence follows the linked NASA source. '+(record.confidence==='site'?'The pin marks a broader site, not an exact artifact position.':''):record.confidenceText;
+    $('#confidence-text').textContent = language==='en'?(record.confidenceTextEn||'Coordinates and their confidence follow the linked NASA source.'):(record.confidenceTextTr||record.confidenceText);
     $('#primary-source').href = record.source;
     $('#primary-source').setAttribute('aria-label', `${record.resource}: ${language==='tr'?'NASA kaynağını aç':'open NASA source'}`);
     loadRecordMedia(record);
@@ -87,6 +133,7 @@
 
   function nasaImageQuery(record) {
     const id=record.id;
+    if(record.type==='crew') return `Apollo ${id.match(/^apollo-(\d+)/)?.[1]} moonwalkers lunar surface`;
     if(id.startsWith('apollo-')) {
       const n=id.match(/^apollo-(\d+)/)?.[1]||'';
       if(id.includes('lrv')) return `Apollo ${n} Lunar Roving Vehicle on Moon`;
@@ -188,8 +235,8 @@
       const button = document.createElement('button');
       button.className = `record-item ${record.status === 'active' ? 'is-active' : 'is-inactive'}${selected === record.id ? ' active' : ''}`;
       button.dataset.confidence = record.confidence;
-      const symbol = record.type === 'aircraft' ? 'H' : record.type === 'rover' ? 'R' : record.type === 'impactor' ? 'I' : record.type === 'equipment' ? 'E' : 'L';
-      button.innerHTML = `<span class="record-symbol">${symbol}</span><span><b>${record.name}</b><small>${record.region}</small></span><time>${record.date}</time>`;
+      const symbol = record.type==='crew'?'A':record.type === 'aircraft' ? 'H' : record.type === 'rover' ? 'R' : record.type === 'impactor' ? 'I' : record.type === 'equipment' ? 'E' : 'L';
+      button.innerHTML = `<span class="record-symbol">${symbol}</span><span><b>${displayName(record)}</b><small>${displayRegion(record)}</small></span><time>${record.date}</time>`;
       button.addEventListener('click', () => selectRecord(record.id, true));
       list.append(button);
     });
@@ -718,12 +765,16 @@
       this.pinLayer.replaceChildren();
       for (const record of filteredRecords()) {
         if (!Number.isFinite(record.lat) || !Number.isFinite(record.lon)) continue;
-        const position = this.project(record.lon, record.lat), pin = document.createElement('button');
+      const position = this.project(record.lon, record.lat), pin = document.createElement('button');
         if (!position.visible) continue;
-        pin.className = `mesh-pin ${record.status === 'active' ? 'operational-active' : 'operational-inactive'}${record.id === selected ? ' active' : ''}`;
-        pin.style.left = `${position.x}px`; pin.style.top = `${position.y}px`;
-        pin.setAttribute('aria-label', `${record.name} — ${record.status === 'active' ? tr('faal') : tr('inactive')} — ${record.confidenceText}`);
-        pin.title = record.name; pin.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8 14.5 8l5.7-1.2-1.2 5.7 3.2 4.8-5.9.5L12 22l-4.3-4.2-5.9-.5L5 12.5 3.8 6.8 9.5 8z"/><circle cx="12" cy="12.5" r="2.2"/></svg>';
+        const crew=record.type==='crew';
+        const crewIndex=crew?records.moon.filter(item=>item.type==='crew').findIndex(item=>item.id===record.id):0;
+        const angle=crewIndex*Math.PI/3-Math.PI/2,offsetX=crew?Math.cos(angle)*21:0,offsetY=crew?Math.sin(angle)*21:0;
+        pin.className = `mesh-pin ${crew?'crew-pin':record.status === 'active' ? 'operational-active' : 'operational-inactive'}${record.id === selected ? ' active' : ''}`;
+        pin.style.left = `${position.x+offsetX-(crew?20:0)}px`; pin.style.top = `${position.y+offsetY-(crew?20:0)}px`;
+        pin.setAttribute('aria-label', crew?`${displayName(record)} — ${record.crew} — ${displayRegion(record)}`:`${displayName(record)} — ${record.status === 'active' ? tr('faal') : tr('inactive')} — ${record.confidenceText}`);
+        pin.title = displayName(record);
+        pin.innerHTML = crew?`<svg viewBox="0 0 40 40" aria-hidden="true"><line x1="20" y1="20" x2="${20-offsetX}" y2="${20-offsetY}"/><circle class="site-anchor" cx="${20-offsetX}" cy="${20-offsetY}" r="2"/><circle class="crew-badge" cx="20" cy="20" r="9.5"/></svg><span>${idMissionNumber(record.id)}</span>`:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8 14.5 8l5.7-1.2-1.2 5.7 3.2 4.8-5.9.5L12 22l-4.3-4.2-5.9-.5L5 12.5 3.8 6.8 9.5 8z"/><circle cx="12" cy="12.5" r="2.2"/></svg>';
         pin.addEventListener('click', event => { event.stopPropagation(); selectRecord(record.id); });
         this.pinLayer.append(pin);
       }
@@ -751,10 +802,10 @@
       map = new SiteMeshMap($('#terrain-canvas'));
       await map.setWorld(world);
       $('#map-status').style.display = 'none';
-      setTimeout(()=>$('#boot-screen').classList.add('hidden'),780);
+      setTimeout(()=>$('#boot-screen').classList.add('hidden'),1550);
     } catch (error) {
       console.error('Site mesh could not load', error);
-      setTimeout(()=>$('#boot-screen').classList.add('hidden'),780);
+      setTimeout(()=>$('#boot-screen').classList.add('hidden'),1550);
       $('#map-status').classList.add('error'); $('#map-status').style.display = 'grid';
       $('#map-status').innerHTML = '<span class="status-symbol">!</span><b>MESH AÇILAMADI</b><p>Yerel NASA yüzey atlasları yüklenemedi. Sayfayı web sunucusu üzerinden yeniden aç.</p>';
     }
@@ -789,7 +840,7 @@
 
   document.querySelectorAll('.world-option,.quick-world').forEach(button => button.addEventListener('click', () => setWorld(button.dataset.world)));
   $('#archive-toggle').addEventListener('click',()=>{const open=$('#archive-drawer').classList.toggle('open');$('#archive-toggle').setAttribute('aria-expanded',String(open));});
-  $('#language-toggle').addEventListener('click',()=>{language=language==='tr'?'en':'tr';localStorage.setItem('oa-language',language);applyLanguage();renderList();});
+  $('#language-toggle').addEventListener('click',()=>{language=language==='tr'?'en':'tr';localStorage.setItem('oa-language-v2',language);applyLanguage();renderList();});
   document.querySelectorAll('.filter').forEach(button => button.addEventListener('click', () => {
     filter = button.dataset.filter;
     document.querySelectorAll('.filter').forEach(item => item.classList.toggle('active', item === button));
@@ -841,5 +892,5 @@
   $('#oldest-stat').textContent = worlds.moon.oldest;
   $('#timeline-range').textContent = `${worlds.moon.oldest} — ${worlds.moon.last}`;
   document.querySelector('.stat:nth-child(2) span').textContent = worlds.moon.oldestName;
-  selected = records.moon[0].id;$('#toolbar-record-count').textContent=String(records.moon.length).padStart(2,'0');applyLanguage(); renderList(); initMap();
+  selected = records.moon[0].id;$('#toolbar-record-count').textContent=String(records.moon.length).padStart(2,'0');buildLunarPhaseMarks();applyLanguage(); renderList(); initMap();
 })();

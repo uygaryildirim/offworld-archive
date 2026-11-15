@@ -51,3 +51,47 @@ footer{height:43px;min-height:43px;justify-content:space-between;border-top:1px 
 .map-legend,.map-scale{display:none!important}
 .map-topline{right:58px}
 @media(max-width:700px){.map-topline{right:52px}}
+
+/* Dotted lunar cycle carried by a true horizontal infinity path. */
+.boot-screen{gap:9px;overflow:hidden}
+.boot-emblem{width:min(440px,82vw);aspect-ratio:2.4;display:grid;place-items:center;animation:emblem-arrive 1s cubic-bezier(.18,.75,.22,1) both}
+.lunar-mark{display:block;width:100%;height:100%;overflow:visible}
+.infinity-halo{fill:none;stroke:#b9d69a;stroke-width:17;opacity:.045;filter:blur(8px)}
+.infinity-trail{fill:none;stroke:#c9dfb1;stroke-width:1.5;stroke-linecap:round;stroke-dasharray:.1 4.2;opacity:.63;animation:trail-flow 3.4s linear infinite}
+.orbit-spark{fill:#f5ffe8;filter:drop-shadow(0 0 5px #c8f39f) drop-shadow(0 0 12px #b9e794)}
+.phase-glow{fill:#d9eaff;opacity:.045;filter:blur(4px);transform-box:fill-box;transform-origin:center;animation:moon-aura 5.6s ease-in-out infinite;animation-delay:calc(var(--phase-index)*-.7s)}
+.moon-dot{fill:#94a0a4;opacity:.33;transition:fill .3s ease,opacity .3s ease}
+.moon-dot-lit{fill:#edf4e9;opacity:.82;filter:drop-shadow(0 0 1.4px #d9e8ca)}
+.lunar-phase{transform-box:fill-box;transform-origin:center;animation:phase-breathe 5.6s ease-in-out infinite;animation-delay:calc(var(--phase-index)*-.7s)}
+.boot-mark .moon-dot{opacity:.32;animation:none}
+.boot-mark .moon-dot-lit{opacity:.86;animation:none}
+.boot-mark .phase-glow{opacity:.045;animation:moon-aura 5.6s ease-in-out infinite;animation-delay:calc(var(--phase-index)*-.7s)}
+.boot-mark .orbit-spark{opacity:1;animation:none}
+.boot-screen>span{font:500 10px var(--mono);letter-spacing:.28em;color:#dce7d3;animation:wordmark-in .8s .25s both}
+.boot-screen>small{font:7px var(--mono);letter-spacing:.2em;color:#788778;animation:wordmark-in .8s .42s both}
+.footer-brand{gap:10px}
+.footer-brand .footer-mark{width:53px;height:23px;flex:0 0 53px;stroke:none;fill:none}
+.footer-brand .footer-mark .infinity-halo{stroke-width:22;opacity:.035}
+.footer-brand .footer-mark .infinity-trail{stroke:#9cad8a;stroke-width:2.8;stroke-dasharray:.1 5.2;opacity:.8}
+.footer-brand .footer-mark .moon-dot{fill:#9cad8a;opacity:.4;filter:none}
+.footer-brand .footer-mark .moon-dot-lit{fill:#d5edb9;opacity:.92;filter:none}
+.footer-brand .footer-mark .phase-glow{opacity:.08;filter:blur(3px)}
+.crew-panel{display:grid;gap:5px;margin:14px 0 2px;padding:10px 11px;background:linear-gradient(110deg,#1a201d,#101513);border:1px solid #343e34;border-left:2px solid #c6dc9d}
+.crew-panel small{font:7px var(--mono);letter-spacing:.14em;color:#b8cb9f}
+.crew-panel b{font:500 13px/1.35 var(--display);color:#e9eee5}
+.crew-panel span{font:8px/1.45 var(--mono);color:#838f83}
+.mesh-pin.crew-pin{width:40px;height:40px;margin:0;filter:none;z-index:28;transition:transform .2s ease,filter .2s ease}
+.mesh-pin.crew-pin svg{width:40px;height:40px;overflow:visible;fill:none;stroke:none;filter:none}
+.mesh-pin.crew-pin svg line{stroke:#d7e6b4;stroke-width:1;stroke-dasharray:1.5 2.4;opacity:.78}
+.mesh-pin.crew-pin svg .site-anchor{fill:#eff8d8;stroke:#101510;stroke-width:1;filter:drop-shadow(0 0 3px #d9f2af)}
+.mesh-pin.crew-pin svg .crew-badge{fill:#151c16eF;stroke:#d8e8b7;stroke-width:1.25}
+.mesh-pin.crew-pin>span{position:absolute;left:50%;top:50%;width:auto;height:auto;border:0;transform:translate(-50%,-52%);font:7px/1 var(--mono);letter-spacing:-.05em;color:#eff6df;pointer-events:none}
+.mesh-pin.crew-pin.active{transform:scale(1.18);filter:drop-shadow(0 0 6px #d7f2aa88)}
+@keyframes trail-flow{to{stroke-dashoffset:-25}}
+@keyframes moon-aura{0%,100%{opacity:.025;transform:scale(.92)}50%{opacity:.17;transform:scale(1.14)}}
+@keyframes phase-breathe{0%,100%{opacity:.76;transform:scale(.97)}50%{opacity:1;transform:scale(1.035)}}
+@keyframes emblem-arrive{from{opacity:0;transform:scale(.86) translateY(8px);filter:blur(5px)}to{opacity:1;transform:scale(1) translateY(0);filter:blur(0)}}
+@keyframes wordmark-in{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){.lunar-phase,.phase-glow,.infinity-trail,.boot-emblem,.boot-screen>span,.boot-screen>small{animation-duration:12s}.orbit-spark{display:none}}
+.status-crew{color:#d9e8b7!important}
+@media(prefers-reduced-motion:reduce){.lunar-phase,.phase-glow,.infinity-trail,.boot-emblem,.boot-screen>span,.boot-screen>small{animation:none!important}.orbit-spark{display:none}}
