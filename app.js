@@ -25,7 +25,6 @@
   let language=localStorage.getItem('oa-language-v2')==='tr'?'tr':'en';
   const tr = key => i18n[language][key] || i18n.tr[key] || key;
   const modelViewerSrc='https://ajax.googleapis.com/ajax/libs/model-viewer/4.1.0/model-viewer.min.js';
-  const mediaCache=new Map();
   let modelViewerPromise=null;
   const normalizeLon = lon => ((lon + 180) % 360 + 360) % 360 - 180;
   let world = 'moon', filter = 'all', selected = null, map = null, drag = null;
@@ -60,7 +59,7 @@
   function displayName(record){
     if(language==='tr')return record.nameTr||record.name;
     if(record.nameEn)return record.nameEn;
-    return record.name.replace(/İniş aşaması|iniş aşaması/g,'Descent Stage').replace(/yükseliş aşaması/g,'Ascent Stage').replace(/ALSEP bilim paketi/g,'ALSEP Science Package').replace(/S-IVB roket aşaması/g,'S-IVB Rocket Stage').replace(/kütle spektrometresi kolu/g,'Mass Spectrometer Boom').replace(/son görev bölgesi/g,'Final Mission Region').replace(/sabit lander/g,'Stationary Lander').replace(/Ay yürüyüşü ekibi/g,'Moonwalkers');
+    return record.name.replace(/İniş aşaması|iniş aşaması/g,'Descent Stage').replace(/yükseliş aşaması/g,'Ascent Stage').replace(/ALSEP bilim paketi/g,'ALSEP Science Package').replace(/S-IVB roket aşaması/g,'S-IVB Rocket Stage').replace(/kütle spektrometresi kolu/g,'Mass Spectrometer Boom').replace(/son görev bölgesi/g,'Final Mission Region').replace(/sabit lander/g,'Stationary Lander').replace(/Ay yürüyüşü ekibi/g,'Moonwalkers').replace(/penetratörü/g,'Impactor').replace(/kayıp araç/g,'Lost Lander').replace(/iniş platformu/g,'Lander Platform');
   }
   function idMissionNumber(id){return String(id?.id??id??'').match(/^apollo-(\d+)/)?.[1]||'00';}
   function displayRegion(record){return language==='tr'?(record.regionTr||record.region):(record.regionEn||record.region.replace('Çarpma yeri belirlenmedi','Impact site undetermined').replace('kesin konum bilinmiyor','exact location unknown').replace('Kesin konum bilinmiyor','Exact location unknown').replace('tahmini çarpma','estimated impact').replace('belirsiz alan','uncertain area'));}
@@ -113,7 +112,7 @@
     const isCrew=record.type==='crew';
     const statusLabel = isCrew ? tr('landed') : record.status === 'active' ? tr('faal') : record.status === 'inactive' ? tr('inactive') : (language==='tr'?'DURUM BELİRSİZ':'STATUS UNKNOWN');
     const heroStory=displayStory(record),crewPanel=isCrew?`<section class="crew-panel"><small>${tr('crew')}</small><b>${record.crew}</b><span>${tr('landing')}: ${displayRegion(record)}</span></section>`:'';
-    $('#detail-content').innerHTML = `<div class="detail-hero"><div class="detail-kicker ${isCrew?'status-crew':record.status === 'active' ? 'status-active' : 'status-inactive'}">${type} · ${record.date} · ${statusLabel}</div><h2 class="detail-title">${displayName(record)}</h2><div class="detail-subtitle">${displayRegion(record).toUpperCase()}</div><p class="detail-desc">${heroStory}</p>${crewPanel}${note}</div><div id="record-media" class="record-media" data-record-id="${record.id}"><div class="media-loading"><i></i><span>${language==='tr'?'NASA arşivi aranıyor':'Searching NASA archive'}</span></div></div><div class="meta-grid"><div class="meta-item"><small>${tr('year')}</small><b>${record.date}</b></div><div class="meta-item"><small>${isCrew?tr('missionResult'):tr('status')}</small><b class="status-text ${isCrew?'status-crew':record.status === 'active' ? 'status-active' : 'status-inactive'}">${statusLabel}</b></div><div class="meta-item"><small>${tr('coords')}</small><b>${displayCoordinates(record)}</b></div><div class="meta-item"><small>${tr('type')}</small><b>${recordType}</b></div></div>`;
+    $('#detail-content').innerHTML = `<div class="detail-hero"><div class="detail-kicker ${isCrew?'status-crew':record.status === 'active' ? 'status-active' : 'status-inactive'}">${type} · ${record.date} · ${statusLabel}</div><h2 class="detail-title">${displayName(record)}</h2><div class="detail-subtitle">${displayRegion(record).toUpperCase()}</div><p class="detail-desc">${heroStory}</p>${crewPanel}${note}</div><div id="record-media" class="record-media" data-record-id="${record.id}"></div><div class="meta-grid"><div class="meta-item"><small>${tr('year')}</small><b>${record.date}</b></div><div class="meta-item"><small>${isCrew?tr('missionResult'):tr('status')}</small><b class="status-text ${isCrew?'status-crew':record.status === 'active' ? 'status-active' : 'status-inactive'}">${statusLabel}</b></div><div class="meta-item"><small>${tr('coords')}</small><b>${displayCoordinates(record)}</b></div><div class="meta-item"><small>${tr('type')}</small><b>${recordType}</b></div></div>`;
     $('#confidence-value').textContent = language==='tr'?(record.confidenceLabelTr||record.confidenceLabel):(record.confidence==='exact'?'HIGH CONFIDENCE':record.confidence==='site'?'SITE LEVEL':'UNKNOWN');
     $('#confidence-value').style.color = record.confidence === 'site' ? 'var(--amber)' : record.confidence === 'exact' ? 'var(--accent)' : '#9ba09e';
     $('#confidence-meter').className = record.confidence === 'site' ? 'site' : record.confidence === 'exact' ? '' : 'unknown';
@@ -131,42 +130,6 @@
     return null;
   }
 
-  function nasaImageQuery(record) {
-    const id=record.id;
-    if(record.type==='crew') return `Apollo ${id.match(/^apollo-(\d+)/)?.[1]} moonwalkers lunar surface`;
-    if(id.startsWith('apollo-')) {
-      const n=id.match(/^apollo-(\d+)/)?.[1]||'';
-      if(id.includes('lrv')) return `Apollo ${n} Lunar Roving Vehicle on Moon`;
-      if(id.includes('alsep')) return `Apollo ${n} ALSEP lunar surface experiments`;
-      if(id.includes('sivb')) return `Apollo ${n} Saturn IVB Moon impact`;
-      if(id.includes('subsatel')) return `Apollo ${n} subsatellite Moon`;
-      return `Apollo ${n} lunar module Moon surface`;
-    }
-    if(id.startsWith('survey-or-')) return `Surveyor ${id.match(/\d+/)?.[0]} Moon lander`;
-    if(id.startsWith('ranger-')) return `Ranger ${id.match(/\d+/)?.[0]} spacecraft Moon`;
-    if(id.startsWith('lunar-orbiter-')) return `Lunar Orbiter ${id.match(/\d+/)?.[0]} Moon spacecraft`;
-    if(id==='explorer-35'||id==='explorer-49') return `${record.name} lunar spacecraft`;
-    if(id==='lunar-prospector'||id.startsWith('grail-')||id==='ladee') return `${record.name} Moon NASA mission`;
-    if(id.startsWith('viking-')) return `${record.name} Mars surface lander`;
-    if(id.startsWith('pathfinder')) return `Mars Pathfinder ${id==='pathfinder'?'Sojourner rover':'lander'} Mars`;
-    if(id.startsWith('spirit')||id.startsWith('opportunity')) return `${id.startsWith('spirit')?'Spirit':'Opportunity'} Mars rover`;
-    if(id==='curiosity') return 'Curiosity Mars rover';
-    if(id==='perseverance') return 'Perseverance Mars rover';
-    if(id==='insight'||id==='phoenix') return `${record.name} Mars lander`;
-    if(id==='ingenuity') return 'Ingenuity Mars helicopter';
-    if(id.startsWith('deep-space-2')) return 'Deep Space 2 Mars penetrator';
-    if(id==='mars-polar-lander') return 'Mars Polar Lander NASA';
-    return `${record.name} ${world==='moon'?'Moon':'Mars'} NASA spacecraft`;
-  }
-
-  function nasaImageQueries(record) {
-    const primary=nasaImageQuery(record),apollo=record.id.match(/^apollo-(\d+)/)?.[1],worldName=world==='moon'?'Moon':'Mars';
-    const fallbacks=apollo
-      ? [`Apollo ${apollo} lunar surface NASA`, `Apollo ${apollo} ${record.type==='crew'?'astronauts Moonwalk':record.type==='rover'?'lunar rover':'Moon mission'} NASA`]
-      : [`${record.name} NASA ${worldName} mission`, `${worldName} ${record.type} ${record.name} NASA`];
-    return [...new Set([primary,...fallbacks])];
-  }
-
   function ensureModelViewer() {
     if(customElements.get('model-viewer')) return Promise.resolve();
     if(modelViewerPromise) return modelViewerPromise;
@@ -179,84 +142,39 @@
     return modelViewerPromise;
   }
 
-  async function findNasaImage(record) {
-    const queries=nasaImageQueries(record),cacheKey=queries.join(' · ');
-    if(mediaCache.has(cacheKey)) return mediaCache.get(cacheKey);
-    const promise=(async()=>{
-      const candidates=new Map();
-      for(const query of queries){
-        try{
-          const url=`https://images-api.nasa.gov/search?${new URLSearchParams({q:query,media_type:'image',page_size:'8'})}`;
-          const response=await fetch(url,{headers:{Accept:'application/json'}});
-          if(!response.ok)continue;
-          const json=await response.json(),items=json.collection?.items||[];
-          const terms=query.toLowerCase().split(/[^a-z0-9]+/).filter(word=>word.length>2&&!['nasa','moon','mars','rover','spacecraft','lander','surface','mission'].includes(word));
-          const searchable=item=>`${item.data?.[0]?.title||''} ${item.data?.[0]?.description||''} ${(item.data?.[0]?.keywords||[]).join(' ')}`.toLowerCase();
-          items.sort((a,b)=>terms.reduce((n,t)=>n+(searchable(b).includes(t)?1:0),0)-terms.reduce((n,t)=>n+(searchable(a).includes(t)?1:0),0));
-          for(const item of items){
-            const preview=item.links?.find(link=>link.rel==='preview'&&/^https:\/\//.test(link.href));
-            if(!preview||candidates.has(preview.href))continue;
-            const data=item.data?.[0]||{};
-            candidates.set(preview.href,{url:preview.href,title:data.title||record.name,credit:data.center||'NASA Image and Video Library',page:`https://images.nasa.gov/details/${encodeURIComponent(data.nasa_id||'')}`});
-            if(candidates.size>=12)break;
-          }
-          if(candidates.size>=8)break;
-        }catch(error){console.warn('NASA image search query failed',query,error);}
-      }
-      return [...candidates.values()];
-    })();
-    mediaCache.set(cacheKey,promise);
-    try{const result=await promise;if(!result.length)mediaCache.delete(cacheKey);return result;}
-    catch(error){mediaCache.delete(cacheKey);throw error;}
-  }
-
   async function loadRecordMedia(record) {
     const host=$('#record-media');if(!host)return;
+    renderAtlasFallback(record,host);
     const model=nasaModelFor(record);
     if(model&&!model.legacy){
       try{
         await ensureModelViewer();if($('#record-media')!==host||host.dataset.recordId!==record.id)return;
         const viewer=document.createElement('model-viewer');viewer.setAttribute('src',model.src);viewer.setAttribute('alt',model.name);viewer.setAttribute('camera-controls','');viewer.setAttribute('auto-rotate','');viewer.setAttribute('rotation-per-second','13deg');viewer.setAttribute('shadow-intensity','.65');viewer.setAttribute('exposure','1.08');viewer.setAttribute('loading','lazy');viewer.className='record-model';
-        host.replaceChildren(viewer,mediaCredit(model.credit,model.page,model.representative?`${model.name} · representative model`:model.name));
-        viewer.addEventListener('error',()=>loadRecordImage(record,host),{once:true});return;
+        host.querySelector('.record-photo')?.replaceWith(viewer);
+        host.querySelector('.media-sources')?.append(mediaSourceLink(model.page,model.representative?`${model.name} · representative model`:model.name));
+        viewer.addEventListener('error',()=>viewer.replaceWith(createAtlasFigure(record)),{once:true});return;
       }catch{}
     }
-    await loadRecordImage(record,host);
   }
 
-  function mediaCredit(credit,page,label) {
-    const caption=document.createElement('div');caption.className='media-caption';
-    const text=document.createElement('span');text.textContent=`${label} · ${credit}`;
-    const link=document.createElement('a');link.href=page;link.target='_blank';link.rel='noreferrer';link.textContent=language==='tr'?'NASA kaynağı ↗':'NASA source ↗';
-    caption.append(text,link);return caption;
+  function mediaSourceLink(url,label){
+    const link=document.createElement('a');link.className='media-source-link';link.href=url;link.target='_blank';link.rel='noreferrer';link.textContent=`${label} ↗`;return link;
   }
 
-  async function loadRecordImage(record,host) {
-    try{
-      const images=await findNasaImage(record);if($('#record-media')!==host||host.dataset.recordId!==record.id) return;
-      let image=null;
-      const probes=await Promise.all(images.slice(0,6).map(candidate=>new Promise(resolve=>{const probe=new Image();const timer=setTimeout(()=>resolve(false),3500);probe.onload=()=>{clearTimeout(timer);resolve(true);};probe.onerror=()=>{clearTimeout(timer);resolve(false);};probe.src=candidate.url;})));
-      image=images.find((_,index)=>probes[index]);
-      if(!image)throw new Error('No loadable NASA image found after mission-specific searches');
-      if($('#record-media')!==host||host.dataset.recordId!==record.id)return;
-      const figure=document.createElement('a');figure.className='record-photo';figure.href=image.page;figure.target='_blank';figure.rel='noreferrer';
-      const img=document.createElement('img');img.src=image.url;img.alt=image.title;img.loading='lazy';img.decoding='async';
-      const title=document.createElement('span');title.className='record-photo-title';title.textContent=image.title;
-      figure.append(img,title);host.replaceChildren(figure,mediaCredit(image.credit,image.page,image.title));
-    }catch{
-      if($('#record-media')!==host||host.dataset.recordId!==record.id)return;
-      renderAtlasFallback(record,host);
-    }
-  }
-
-  function renderAtlasFallback(record,host){
+  function createAtlasFigure(record){
     const body=records.moon.includes(record)?'moon':'mars',label=body==='moon'?'LRO WAC GLOBAL MOSAIC':'VIKING GLOBAL MOSAIC';
     const figure=document.createElement('div');figure.className='record-photo record-photo-context';
     const img=document.createElement('img');img.src=`./assets/maps/${body}-color.jpg`;img.alt=`NASA ${label.toLowerCase()} showing the mission region`;img.loading='lazy';img.decoding='async';
     const title=document.createElement('span');title.className='record-photo-title';title.textContent=`${label} · ${displayRegion(record).toUpperCase()} · ${language==='tr'?'GÖREV BÖLGESİ':'MISSION REGION'}`;
-    figure.append(img,title);
-    const credit=mediaCredit(body==='moon'?'NASA LRO WAC':'NASA Viking Orbiter',`https://trek.nasa.gov/${body}/`,language==='tr'?'YÜZEY ATLASI · BÖLGE BAĞLAMI':'SURFACE ATLAS · REGIONAL CONTEXT');
-    host.replaceChildren(figure,credit);
+    figure.append(img,title);return figure;
+  }
+
+  function renderAtlasFallback(record,host){
+    const body=records.moon.includes(record)?'moon':'mars',sources=document.createElement('div');sources.className='media-sources';
+    sources.append(mediaSourceLink(record.source,record.resource|| (language==='tr'?'NASA görev kaydı':'NASA mission record')));
+    if(record.secondary&&record.secondary!==record.source)sources.append(mediaSourceLink(record.secondary,language==='tr'?'İkincil NASA kaynağı':'Additional NASA source'));
+    const credit=document.createElement('span');credit.className='media-attribution';credit.textContent=body==='moon'?'NASA LRO WAC · SURFACE ATLAS':'NASA VIKING ORBITER · SURFACE ATLAS';
+    host.replaceChildren(createAtlasFigure(record),credit,sources);
   }
 
   function renderList() {
@@ -301,9 +219,10 @@
     const context=canvas.getContext('2d',{willReadFrequently:true});context.drawImage(source,0,0,canvas.width,canvas.height);return {width:canvas.width,height:canvas.height,pixels:context.getImageData(0,0,canvas.width,canvas.height).data};
   }
   const clamp01=value=>Math.max(0,Math.min(1,value));
-  function createDottedMoon(canvas,albedo,dem){
+  function createDottedMoon(canvas,sparkleCanvas,albedo,dem){
     const cssSize=canvas.getBoundingClientRect().width||108,dpr=Math.min(window.devicePixelRatio||1,2),size=Math.max(96,Math.round(cssSize*dpr));
-    canvas.width=size;canvas.height=size;const radius=size*.445,step=Math.max(1.45,dpr*.78),dots=[],c={a:albedo,dem};
+    for(const layer of [canvas,sparkleCanvas]){layer.width=size;layer.height=size;}
+    const radius=size*.445,step=Math.max(1.45,dpr*.78),dots=[],sparkles=[],c={a:albedo,dem};
     const pixel=(data,w,h,x,y)=>{x=(x%w+w)%w;y=Math.max(0,Math.min(h-1,y));return data[(y*w+x)*4];};
     for(let y=-radius;y<=radius;y+=step)for(let x=-radius;x<=radius;x+=step){
       const nx=x/radius,ny=-y/radius,radial=nx*nx+ny*ny;if(radial>=1)continue;
@@ -314,73 +233,52 @@
         terrain=pixel(c.dem.pixels,c.dem.width,c.dem.height,dx,dy)/255,
         slopeX=(pixel(c.dem.pixels,c.dem.width,c.dem.height,dx+4,dy)-pixel(c.dem.pixels,c.dem.width,c.dem.height,dx-4,dy))/255,
         slopeY=(pixel(c.dem.pixels,c.dem.width,c.dem.height,dx,dy+4)-pixel(c.dem.pixels,c.dem.width,c.dem.height,dx,dy-4))/255,
-        relief=clamp01(.78+(-slopeX+slopeY*.35)*1.5),
-        surface=clamp01((texture*.68+terrain*.24+.08)*relief),
+        relief=clamp01(.82+(-slopeX+slopeY*.35)*1.1),
+        light=.52+.48*clamp01(.4-nx*.24+ny*.22+nz*.75),
+        surface=clamp01((texture*.66+terrain*.24+.1)*relief*light),
         seed=Math.abs(Math.sin((x+431.7)*127.1+(y+173.3)*311.7)*43758.5453),
-        random=seed-Math.floor(seed);
-      dots.push({x:size/2+x,y:size/2+y,nx,ny,surface,phase:lunarShadowPhase(nx,ny),radius:step*(.48+surface*.15),sparkle:random>.995});
+        random=seed-Math.floor(seed),
+        dot={x:size/2+x,y:size/2+y,surface,radius:step*(.46+surface*.17),twinkle:random*Math.PI*2};
+      dots.push(dot);if(random>.991)sparkles.push(dot);
     }
-    dots.sort((a,b)=>a.phase-b.phase||a.x-b.x);
-    return {size,step,dots,drawn:0,context:canvas.getContext('2d')};
+    const model={size,step,dots,sparkles,context:canvas.getContext('2d'),sparkleContext:sparkleCanvas.getContext('2d')};
+    paintMoonSurface(model);return model;
   }
-  function lunarShadowPhase(nx,ny){
-    let low=0,high=2;
-    for(let i=0;i<18;i++){
-      const offset=(low+high)*.5,half=offset*.5;
-      if((nx+offset)**2+ny**2>1)high=offset;else low=offset;
-    }
-    return high*.5;
-  }
-  function lunarPhaseThreshold(illumination){
-    let low=0,high=2;
-    for(let i=0;i<18;i++){
-      const shift=(low+high)*.5,half=shift*.5;
-      const lit=1-(2*Math.acos(Math.min(1,half))-half*Math.sqrt(Math.max(0,4-shift*shift)))/Math.PI;
-      if(lit<illumination)low=shift;else high=shift;
-    }
-    return high*.5;
-  }
-  function paintMoonDotBatch(model,end){
-    const {dots,context}=model,bucketCount=8,buckets=Array.from({length:bucketCount},()=>[]),sparkles=[];
-    for(let index=model.drawn;index<end;index++){
-      const dot=dots[index],brightness=clamp01(.28+dot.surface*.68),level=Math.min(bucketCount-1,Math.floor(brightness*(bucketCount-1)));
-      buckets[level].push([dot.x,dot.y,dot.radius]);
-      if(dot.sparkle)sparkles.push(dot);
-    }
+  function paintMoonSurface(model){
+    const {dots,context}=model,bucketCount=8,buckets=Array.from({length:bucketCount},()=>[]);
+    for(const dot of dots){const level=Math.min(bucketCount-1,Math.floor(dot.surface*(bucketCount-1)));buckets[level].push(dot);}
     buckets.forEach((dots,level)=>{
-      if(!dots.length)return;const tone=Math.round(210+level*5.1);context.beginPath();
-      for(const [x,y,r] of dots){context.moveTo(x+r,y);context.arc(x,y,r,0,Math.PI*2);}
-      const representativeAlpha=.52+(level/(bucketCount-1))*.44;
-      context.fillStyle=`rgba(${tone},${tone+4},${tone-2},${representativeAlpha.toFixed(3)})`;context.fill();
+      if(!dots.length)return;const tone=Math.round(184+level*8.4);context.beginPath();
+      for(const dot of dots){context.moveTo(dot.x+dot.radius,dot.y);context.arc(dot.x,dot.y,dot.radius,0,Math.PI*2);}
+      context.fillStyle=`rgba(${tone},${tone+5},${tone+12},${(.68+level*.043).toFixed(3)})`;context.fill();
     });
-    context.save();context.shadowColor='rgba(226,244,210,.8)';context.shadowBlur=3;
-    for(const dot of sparkles){context.beginPath();context.arc(dot.x,dot.y,dot.radius*1.3,0,Math.PI*2);context.fillStyle='rgba(244,250,232,.32)';context.fill();}
-    context.restore();
-    model.drawn=end;
+  }
+  function twinkleMoon(model,canvas,duration=680){
+    const ctx=model.sparkleContext,start=performance.now();
+    return new Promise(resolve=>{
+      const frame=now=>{
+        ctx.clearRect(0,0,model.size,model.size);ctx.save();ctx.globalCompositeOperation='lighter';ctx.shadowColor='rgba(229,244,216,.9)';ctx.shadowBlur=2.4;
+        for(const dot of model.sparkles){
+          const pulse=(Math.sin(now*.005+dot.twinkle)+1)*.5;if(pulse<.88)continue;
+          ctx.globalAlpha=(pulse-.88)*3.4;ctx.beginPath();ctx.arc(dot.x,dot.y,dot.radius*(1.12+pulse*.35),0,Math.PI*2);ctx.fillStyle='#f4f8e9';ctx.fill();
+        }
+        ctx.restore();
+        if(now-start<duration)requestAnimationFrame(frame);else{ctx.clearRect(0,0,model.size,model.size);resolve();}
+      };
+      if(matchMedia('(prefers-reduced-motion: reduce)').matches){resolve();return;}
+      requestAnimationFrame(frame);
+    });
   }
   async function runMoonPhaseJourney(){
-    const boot=$('#boot-screen'),canvas=$('#phase-moon'),caption=$('#phase-current');
+    const boot=$('#boot-screen'),canvas=$('#phase-moon'),sparkles=$('#phase-sparkles'),caption=$('#phase-current');
     try{
       const [surface,elevation]=await Promise.all([image('./assets/maps/moon-color.jpg'),image('./assets/maps/moon-height.png')]);
-      const albedo=imagePixels(surface),dem=imagePixels(elevation),model=createDottedMoon(canvas,albedo,dem);
-      caption.textContent=language==='tr'?'YENİ AY · 02% AYDINLIK':'NEW MOON · 02% ILLUMINATED';
+      const albedo=imagePixels(surface),dem=imagePixels(elevation),model=createDottedMoon(canvas,sparkles,albedo,dem);
+      caption.textContent=language==='tr'?'AY YÜZEYİ · NOKTA ATLASI':'LUNAR SURFACE · DOT ATLAS';
       boot.classList.add('phase-ready');
-      const started=performance.now(),duration=900,batchSize=900;
-      await new Promise(resolve=>{
-        const frame=now=>{
-          const t=Math.min(1,(now-started)/duration),eased=t*t*(3-2*t),illumination=.01+.99*eased,phase=lunarPhaseThreshold(illumination);
-          let target=0,upper=model.dots.length;
-          while(target<upper){const middle=(target+upper)>>1;if(model.dots[middle].phase<=phase)target=middle+1;else upper=middle;}
-          const end=Math.min(target,model.drawn+batchSize);if(end>model.drawn)paintMoonDotBatch(model,end);
-          const label=illumination<.09?'NEW MOON':illumination<.39?'WAXING CRESCENT':illumination<.61?'FIRST QUARTER':illumination<.96?'WAXING GIBBOUS':'FULL MOON';
-          const localized=language==='tr'?({'NEW MOON':'YENİ AY','WAXING CRESCENT':'HİLAL','FIRST QUARTER':'İLK DÖRDÜN','WAXING GIBBOUS':'ŞİŞKİN AY','FULL MOON':'DOLUNAY'}[label]):label;
-          caption.textContent=`${localized} · ${String(Math.round(illumination*100)).padStart(2,'0')}% ${language==='tr'?'AYDINLIK':'ILLUMINATED'}`;
-          if(t<1||model.drawn<model.dots.length)requestAnimationFrame(frame);else resolve();
-        };
-        requestAnimationFrame(frame);
-      });
-      caption.textContent=language==='tr'?'DOLUNAY · ARŞİV AÇILIYOR':'FULL MOON · ARCHIVE OPENING';
-      boot.classList.add('phase-complete');await new Promise(resolve=>setTimeout(resolve,200));
+      await twinkleMoon(model,sparkles,680);
+      caption.textContent=language==='tr'?'ARŞİV AÇILIYOR':'OPENING ARCHIVE';
+      boot.classList.add('phase-complete');await new Promise(resolve=>setTimeout(resolve,90));
     }catch(error){console.warn('Dotted Moon artwork could not load',error);}
     boot.classList.add('phase-ready');
   }
@@ -620,7 +518,8 @@
       const z2 = Math.sin(centerLat) * point.y + Math.cos(centerLat) * z1;
       const distance = 1.05 + 1.0 / this.view.zoom, perspective = 1 / Math.max(.05, distance - z2);
       const scale = Math.min(width, height) * .62 * perspective;
-      return {x:width / 2 + x1 * scale + this.view.panX, y:height / 2 - y2 * scale + this.view.panY, visible:z2 > .008};
+      const cameraDistance=1.05+1/this.view.zoom;
+      return {x:width / 2 + x1 * scale + this.view.panX, y:height / 2 - y2 * scale + this.view.panY, visible:z2 * cameraDistance > radius * radius + .001};
     }
 
     surfaceAtScreen(x, y) {
@@ -681,8 +580,6 @@
       const canvas=this.spaceCanvas, ctx=this.spaceContext, width=canvas.clientWidth, height=canvas.clientHeight;
       if(!ctx || !width || !height) return;
       const dpr=Math.min(window.devicePixelRatio||1,2); canvas.width=Math.round(width*dpr); canvas.height=Math.round(height*dpr); ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,width,height);this.objectLayer.replaceChildren();
-      const haze=ctx.createRadialGradient(width*.5,height*.46,Math.min(width,height)*.23,width*.5,height*.46,Math.max(width,height)*.72);
-      haze.addColorStop(0,'rgba(40,60,88,.14)'); haze.addColorStop(.56,'rgba(17,30,54,.09)'); haze.addColorStop(1,'rgba(3,7,14,0)'); ctx.fillStyle=haze; ctx.fillRect(0,0,width,height);
       const orientation=this.bodyOrientation(this.world), offset=this.world==='moon'?40:0, cameraLon=(this.view.lon+offset)*Math.PI/180, cameraLat=this.view.lat*Math.PI/180;
       const focal=Math.min(width,height)*.62, centerX=width/2+this.view.panX, centerY=height/2+this.view.panY;
       const toCamera=(body)=>{const x1=Math.cos(cameraLon)*body[0]-Math.sin(cameraLon)*body[2],z1=Math.sin(cameraLon)*body[0]+Math.cos(cameraLon)*body[2],y2=Math.cos(cameraLat)*body[1]-Math.sin(cameraLat)*z1,z2=Math.sin(cameraLat)*body[1]+Math.cos(cameraLat)*z1;return[x1,y2,z2];};
@@ -765,18 +662,16 @@
       const ctx=this.glowContext,canvas=this.glowCanvas,width=canvas.clientWidth,height=canvas.clientHeight,p=this.pointerCurrent||this.pointerTarget;
       if(!ctx||!p||!width||!height)return;
       const target=this.pointerTarget||p;p.x+=(target.x-p.x)*.16;p.y+=(target.y-p.y)*.16;
-      const time=now*.001,radius=145;
-      ctx.clearRect(0,0,width,height);ctx.save();
+      const time=now*.001,radius=190;
+      ctx.clearRect(0,0,width,height);ctx.save();ctx.globalCompositeOperation='lighter';
       for(const star of this.deepStarPoints){
         const dx=star.x-p.x,dy=star.y-p.y,distance=Math.hypot(dx,dy);if(distance>radius)continue;
-        const edge=Math.max(0,1-(distance/radius)**3),base=Math.max(.04,Math.min(.30,(9.7-star.mag)*.07));
-        const alpha=edge*base*(.9+.1*Math.sin(time*1.7+star.phase));if(alpha<.012)continue;
-        const color=star.bv>.55?'255,231,202':'218,232,255';
-        ctx.fillStyle=`rgba(${color},${alpha})`;ctx.fillRect(star.x,star.y,.8,.8);
-        if(star.mag<7.1&&edge>.55){
-          const length=(7.1-star.mag)*.42;ctx.strokeStyle=`rgba(${color},${alpha*.24})`;ctx.lineWidth=.4;
-          ctx.beginPath();ctx.moveTo(star.x-length,star.y);ctx.lineTo(star.x+length,star.y);ctx.moveTo(star.x,star.y-length*.7);ctx.lineTo(star.x,star.y+length*.7);ctx.stroke();
-        }
+        const edge=Math.max(0,1-(distance/radius)**2),base=Math.max(.015,Math.min(.10,(9.7-star.mag)*.026));
+        const pulse=(Math.sin(time*(1.15+(star.mag%1)*.8)+star.phase)+1)*.5,flash=Math.pow(Math.max(0,(pulse-.72)/.28),2);
+        const alpha=edge*(base+flash*.32);if(alpha<.008)continue;
+        const color=star.bv>.55?'255,238,216':'235,241,229';
+        ctx.shadowColor=`rgba(${color},${flash*.72})`;ctx.shadowBlur=flash*4;
+        ctx.fillStyle=`rgba(${color},${alpha})`;ctx.fillRect(star.x,star.y,flash>.58?1.35:.8,flash>.58?1.35:.8);
       }
       ctx.restore();
     }
@@ -916,11 +811,11 @@
       const position = this.project(record.lon, record.lat), pin = document.createElement('button');
         if (!position.visible) continue;
         const crew=record.type==='crew';
-        pin.className = `mesh-pin ${crew?'crew-pin':record.status === 'active' ? 'operational-active' : 'operational-inactive'}${record.id === selected ? ' active' : ''}`;
-        pin.style.left = `${position.x-(crew?20:12)}px`; pin.style.top = `${position.y-(crew?36:12)}px`;
+        pin.className = `mesh-pin ${record.status === 'active' ? 'operational-active' : 'operational-inactive'}${record.id === selected ? ' active' : ''}`;
+        pin.style.left = `${position.x}px`; pin.style.top = `${position.y}px`;
         pin.setAttribute('aria-label', crew?`${displayName(record)} — ${record.crew} — ${displayRegion(record)}`:`${displayName(record)} — ${record.status === 'active' ? tr('faal') : tr('inactive')} — ${record.confidenceText}`);
         pin.title = displayName(record);
-        pin.innerHTML = crew?`<svg viewBox="0 0 40 40" aria-hidden="true"><path class="astronaut-silhouette" d="M20 3.5c-5.2 0-8.5 3.9-8.5 9.1v2.6c0 3.2 1.7 5.8 4.4 7.1l-.6 2.1c-3.8.9-6.1 3.6-6.1 7.3v2.1h21.6v-2.1c0-3.7-2.3-6.4-6.1-7.3l-.6-2.1c2.7-1.3 4.4-3.9 4.4-7.1v-2.6c0-5.2-3.3-9.1-8.5-9.1Z"/><path class="astronaut-visor" d="M13.5 11.5c0-2.4 2.6-4.2 6.5-4.2s6.5 1.8 6.5 4.2v2.1c0 2.3-2.7 3.7-6.5 3.7s-6.5-1.4-6.5-3.7z"/><path class="astronaut-pack" d="M9.6 14.2h2v7.1l-2 1.4zM28.4 14.2h2v8.5l-2-1.4z"/><path class="astronaut-seam" d="M16.3 25.1h7.4v6.1h-7.4zM16.3 28.1h7.4"/><circle class="site-anchor" cx="20" cy="36.2" r="1.7"/></svg><span>${idMissionNumber(record.id)}</span>`:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8 14.5 8l5.7-1.2-1.2 5.7 3.2 4.8-5.9.5L12 22l-4.3-4.2-5.9-.5L5 12.5 3.8 6.8 9.5 8z"/><circle cx="12" cy="12.5" r="2.2"/></svg>';
+        pin.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8 14.5 8l5.7-1.2-1.2 5.7 3.2 4.8-5.9.5L12 22l-4.3-4.2-5.9-.5L5 12.5 3.8 6.8 9.5 8z"/><circle cx="12" cy="12.5" r="2.2"/></svg>';
         pin.addEventListener('click', event => { event.stopPropagation(); selectRecord(record.id); });
         this.pinLayer.append(pin);
       }
