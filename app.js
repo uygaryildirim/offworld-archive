@@ -263,9 +263,10 @@
     });
   }
 
-  function imagePixels(source){
-    const canvas=document.createElement('canvas');canvas.width=source.naturalWidth;canvas.height=source.naturalHeight;
-    const context=canvas.getContext('2d',{willReadFrequently:true});context.drawImage(source,0,0);return {width:canvas.width,height:canvas.height,pixels:context.getImageData(0,0,canvas.width,canvas.height).data};
+  function imagePixels(source,maxWidth=1024){
+    const scale=Math.min(1,maxWidth/source.naturalWidth),canvas=document.createElement('canvas');
+    canvas.width=Math.max(1,Math.round(source.naturalWidth*scale));canvas.height=Math.max(1,Math.round(source.naturalHeight*scale));
+    const context=canvas.getContext('2d',{willReadFrequently:true});context.drawImage(source,0,0,canvas.width,canvas.height);return {width:canvas.width,height:canvas.height,pixels:context.getImageData(0,0,canvas.width,canvas.height).data};
   }
   const clamp01=value=>Math.max(0,Math.min(1,value));
   function paintDottedMoon(canvas,illumination,albedo,dem){
@@ -288,13 +289,13 @@
         surface=clamp01((texture*.72+terrain*.2+.08)*relief),
         brightness=clamp01((.13+surface*.68)*(.14+light*.86)),
         level=Math.min(bucketCount-1,Math.floor(brightness*(bucketCount-1))),
-        dotRadius=step*(.24+brightness*.2);
+        dotRadius=step*(.36+brightness*.13);
       buckets[level].push([size/2+x,size/2+y,dotRadius]);
     }
     buckets.forEach((dots,level)=>{
-      if(!dots.length)return;const tone=Math.round(151+level*11.3);context.beginPath();
+      if(!dots.length)return;const tone=Math.round(169+level*8.2);context.beginPath();
       for(const [x,y,r] of dots){context.moveTo(x+r,y);context.arc(x,y,r,0,Math.PI*2);}
-      const representativeAlpha=.045+(level/(bucketCount-1))*.82;
+      const representativeAlpha=.22+(level/(bucketCount-1))*.74;
       context.fillStyle=`rgba(${tone},${tone+4},${tone-2},${representativeAlpha.toFixed(3)})`;context.fill();
     });
   }
@@ -308,9 +309,9 @@
     }catch(error){console.warn('Dotted Moon artwork could not load',error);}
     boot.classList.add('phase-ready');setActive(3);await new Promise(resolve=>setTimeout(resolve,420));
     const journey=[2,1,0,1,2,3,4,5,6];
-    for(const index of journey){setActive(index);await new Promise(resolve=>setTimeout(resolve,285));}
-    boot.classList.add('show-gallery');await new Promise(resolve=>setTimeout(resolve,1250));
-    boot.classList.add('return-to-center');setActive(3);await new Promise(resolve=>setTimeout(resolve,620));
+    for(const index of journey){setActive(index);await new Promise(resolve=>setTimeout(resolve,360));}
+    boot.classList.add('show-gallery');await new Promise(resolve=>setTimeout(resolve,1650));
+    boot.classList.add('return-to-center');setActive(3);await new Promise(resolve=>setTimeout(resolve,720));
   }
 
   class SiteMeshMap {
@@ -813,6 +814,9 @@
 
     renderPins() {
       this.pinLayer.replaceChildren();
+      // A world switch is asynchronous. Never project the newly selected world's
+      // records against the previous world's still-visible surface.
+      if (this.world !== world) return;
       for (const record of filteredRecords()) {
         if (!Number.isFinite(record.lat) || !Number.isFinite(record.lon)) continue;
       const position = this.project(record.lon, record.lat), pin = document.createElement('button');
@@ -856,14 +860,12 @@
     } catch (error) {
       console.error('Site mesh could not load', error);
       $('#map-status').classList.add('error'); $('#map-status').style.display = 'grid';
-      $('#map-status').innerHTML = '<span class="status-symbol">!</span><b>MESH AÇILAMADI</b><p>Yerel NASA yüzey atlasları yüklenemedi. Sayfayı web sunucusu üzerinden yeniden aç.</p>';
+      $('#map-status').innerHTML = `<span class="status-symbol">!</span><b>${language==='tr'?'YÜZEY HARİTASI AÇILAMADI':'SURFACE MAP FAILED'}</b><p>${language==='tr'?'NASA yüzey verisi açılamadı. Sayfayı yenileyin; sorun sürerse geliştirici konsolundaki hata ayrıntısına bakın.':'NASA surface data could not be opened. Refresh the page; if the problem persists, check the developer console for details.'}</p>`;
       await introPromise;$('#boot-screen').classList.add('hidden');
     }
   }
 
-  function setWorld(next) {
-    if (next === world) return;
-    world = next;
+  function updateWorldUI() {
     document.querySelectorAll('.world-option').forEach(button => {
       const key = button.dataset.world;
       button.classList.toggle('selected', key === world);
@@ -884,8 +886,38 @@
     applyLanguage();
     document.querySelectorAll('.filter').forEach(button => button.classList.toggle('active', button.dataset.filter === 'all'));
     selected = records[world][0].id; renderList();
+  }
+
+  let worldSwitchVersion = 0;
+  async function setWorld(next) {
+    if (next === world) return;
+    const previous = world, requestVersion = ++worldSwitchVersion;
+    world = next;
+    updateWorldUI();
     $('#map-status').style.display = 'grid';
-    map.setWorld(world).then(() => { if (map.world === world) $('#map-status').style.display = 'none'; });
+    $('#map-status').classList.remove('error');
+    try {
+      await map.setWorld(next);
+      if (requestVersion === worldSwitchVersion && world === next && map.world === next) $('#map-status').style.display = 'none';
+    } catch (error) {
+      console.error(`Could not switch surface to ${next}`, error);
+      if (requestVersion !== worldSwitchVersion) return;
+      // Restore both the interface and the actual mesh. This prevents Moon
+      // records from remaining projected on Mars after a failed Moon reload.
+      world = previous;
+      updateWorldUI();
+      $('#map-status').style.display = 'grid';
+      try {
+        await map.setWorld(previous);
+        if (requestVersion === worldSwitchVersion && map.world === previous) $('#map-status').style.display = 'none';
+      } catch (recoveryError) {
+        console.error(`Could not restore ${previous} surface`, recoveryError);
+        if (requestVersion === worldSwitchVersion) {
+          $('#map-status').classList.add('error');
+          $('#map-status').innerHTML = `<span class="status-symbol">!</span><b>${language==='tr'?'YÜZEY YÜKLENEMEDİ':'SURFACE UNAVAILABLE'}</b><p>${language==='tr'?'Harita geri yüklenemedi. Sayfayı yenileyin.':'The map could not be restored. Refresh the page.'}</p>`;
+        }
+      }
+    }
   }
 
   document.querySelectorAll('.world-option,.quick-world').forEach(button => button.addEventListener('click', () => setWorld(button.dataset.world)));
