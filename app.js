@@ -301,11 +301,9 @@
     const context=canvas.getContext('2d',{willReadFrequently:true});context.drawImage(source,0,0,canvas.width,canvas.height);return {width:canvas.width,height:canvas.height,pixels:context.getImageData(0,0,canvas.width,canvas.height).data};
   }
   const clamp01=value=>Math.max(0,Math.min(1,value));
-  function paintDottedMoon(canvas,illumination,albedo,dem){
-    const cssSize=canvas.parentElement.getBoundingClientRect().width||80,dpr=Math.min(window.devicePixelRatio||1,2.5),size=Math.max(64,Math.round(cssSize*dpr));
-    canvas.width=size;canvas.height=size;const context=canvas.getContext('2d');context.clearRect(0,0,size,size);
-    const radius=size*.455,step=Math.max(1.4,dpr*.72),theta=Math.acos(2*illumination-1),sunX=Math.sin(theta),sunZ=Math.cos(theta),
-      bucketCount=9,buckets=Array.from({length:bucketCount},()=>[]),c={a:albedo,dem};
+  function createDottedMoon(canvas,albedo,dem){
+    const cssSize=canvas.getBoundingClientRect().width||180,dpr=Math.min(window.devicePixelRatio||1,2.5),size=Math.max(96,Math.round(cssSize*dpr));
+    canvas.width=size;canvas.height=size;const radius=size*.445,step=Math.max(1.45,dpr*.78),dots=[],c={a:albedo,dem};
     const pixel=(data,w,h,x,y)=>{x=(x%w+w)%w;y=Math.max(0,Math.min(h-1,y));return data[(y*w+x)*4];};
     for(let y=-radius;y<=radius;y+=step)for(let x=-radius;x<=radius;x+=step){
       const nx=x/radius,ny=-y/radius,radial=nx*nx+ny*ny;if(radial>=1)continue;
@@ -316,14 +314,20 @@
         terrain=pixel(c.dem.pixels,c.dem.width,c.dem.height,dx,dy)/255,
         slopeX=(pixel(c.dem.pixels,c.dem.width,c.dem.height,dx+4,dy)-pixel(c.dem.pixels,c.dem.width,c.dem.height,dx-4,dy))/255,
         slopeY=(pixel(c.dem.pixels,c.dem.width,c.dem.height,dx,dy+4)-pixel(c.dem.pixels,c.dem.width,c.dem.height,dx,dy-4))/255,
-        light=clamp01(nx*sunX+nz*sunZ),
-        relief=clamp01(.72+(-slopeX*sunX+slopeY*.35)*2.4),
-        surface=clamp01((texture*.68+terrain*.24+.08)*relief),
-        brightness=clamp01(.12+surface*.24+Math.pow(light,.62)*.64),
-        level=Math.min(bucketCount-1,Math.floor(brightness*(bucketCount-1))),
-        dotRadius=step*(.52+brightness*.12);
-      if(light<=.008)continue;
-      buckets[level].push([size/2+x,size/2+y,dotRadius]);
+        surface=clamp01((texture*.68+terrain*.24+.08)*.72+(-slopeX+slopeY*.35)*.12);
+      dots.push({x:size/2+x,y:size/2+y,nx,nz,surface,sweep:(1-nx)*.5,radius:step*.54});
+    }
+    return {size,step,dots,context:canvas.getContext('2d')};
+  }
+  function paintDottedMoon(model,illumination,sweepProgress){
+    const {size,step,dots,context}=model;
+    context.clearRect(0,0,size,size);
+    const theta=Math.acos(2*illumination-1),sunX=Math.sin(theta),sunZ=Math.cos(theta),bucketCount=9,buckets=Array.from({length:bucketCount},()=>[]);
+    for(const dot of dots){
+      if(dot.sweep>sweepProgress)continue;
+      const light=clamp01(dot.nx*sunX+dot.nz*sunZ);if(light<=.008)continue;
+      const brightness=clamp01(.12+dot.surface*.24+Math.pow(light,.62)*.64),level=Math.min(bucketCount-1,Math.floor(brightness*(bucketCount-1)));
+      buckets[level].push([dot.x,dot.y,step*(.52+brightness*.12)]);
     }
     buckets.forEach((dots,level)=>{
       if(!dots.length)return;const tone=Math.round(214+level*4.6);context.beginPath();
@@ -333,18 +337,29 @@
     });
   }
   async function runMoonPhaseJourney(){
-    const boot=$('#boot-screen'),cards=[...document.querySelectorAll('.phase-card')],fractions=[.025,.16,.33,.5,.67,.84,.985];
-    const setActive=(index)=>{cards.forEach((card,i)=>{card.classList.toggle('active',i===index);if(i===index)card.classList.add('visited');});const phase=cards[index]?.querySelector('.phase-label')?.textContent||'LUNAR PHASE';$('#phase-current').textContent=`${String(index+1).padStart(2,'0')} / 07 · ${phase}`;};
+    const boot=$('#boot-screen'),canvas=$('#phase-moon'),row=$('#phase-row'),caption=$('#phase-current');
     try{
       const [surface,elevation]=await Promise.all([image('./assets/maps/moon-color.jpg'),image('./assets/maps/moon-height.png')]);
-      const albedo=imagePixels(surface),dem=imagePixels(elevation);
-      cards.forEach((card,index)=>paintDottedMoon(card.querySelector('canvas'),fractions[index],albedo,dem));
+      const albedo=imagePixels(surface),dem=imagePixels(elevation),model=createDottedMoon(canvas,albedo,dem);
+      paintDottedMoon(model,.025,.055);row.style.setProperty('--phase-progress','0deg');
+      caption.textContent=language==='tr'?'YENİ AY · 02% AYDINLIK':'NEW MOON · 02% ILLUMINATED';
+      boot.classList.add('phase-ready');
+      const started=performance.now(),duration=1250;
+      await new Promise(resolve=>{
+        const frame=now=>{
+          const t=Math.min(1,(now-started)/duration),eased=t*t*(3-2*t),illumination=.025+.975*eased,sweep=.055+.945*eased;
+          paintDottedMoon(model,illumination,sweep);row.style.setProperty('--phase-progress',`${eased*360}deg`);
+          const label=illumination<.09?'NEW MOON':illumination<.39?'WAXING CRESCENT':illumination<.61?'FIRST QUARTER':illumination<.96?'WAXING GIBBOUS':'FULL MOON';
+          const localized=language==='tr'?({'NEW MOON':'YENİ AY','WAXING CRESCENT':'HİLAL','FIRST QUARTER':'İLK DÖRDÜN','WAXING GIBBOUS':'ŞİŞKİN AY','FULL MOON':'DOLUNAY'}[label]):label;
+          caption.textContent=`${localized} · ${String(Math.round(illumination*100)).padStart(2,'0')}% ${language==='tr'?'AYDINLIK':'ILLUMINATED'}`;
+          if(t<1)requestAnimationFrame(frame);else resolve();
+        };
+        requestAnimationFrame(frame);
+      });
+      caption.textContent=language==='tr'?'DOLUNAY · ARŞİV AÇILIYOR':'FULL MOON · ARCHIVE OPENING';
+      boot.classList.add('phase-complete');await new Promise(resolve=>setTimeout(resolve,200));
     }catch(error){console.warn('Dotted Moon artwork could not load',error);}
-    boot.classList.add('phase-ready');setActive(3);await new Promise(resolve=>setTimeout(resolve,130));
-    const journey=[2,1,0,1,2,3,4,5,6];
-    for(const index of journey){setActive(index);await new Promise(resolve=>setTimeout(resolve,105));}
-    boot.classList.add('show-gallery');$('#phase-current').textContent='ARCHIVE SIGNAL · ACQUIRED';await new Promise(resolve=>setTimeout(resolve,520));
-    boot.classList.add('return-to-center');setActive(3);await new Promise(resolve=>setTimeout(resolve,250));
+    boot.classList.add('phase-ready');
   }
 
   class SiteMeshMap {
