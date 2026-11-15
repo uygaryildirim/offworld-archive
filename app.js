@@ -62,7 +62,7 @@
     if(record.nameEn)return record.nameEn;
     return record.name.replace(/İniş aşaması|iniş aşaması/g,'Descent Stage').replace(/yükseliş aşaması/g,'Ascent Stage').replace(/ALSEP bilim paketi/g,'ALSEP Science Package').replace(/S-IVB roket aşaması/g,'S-IVB Rocket Stage').replace(/kütle spektrometresi kolu/g,'Mass Spectrometer Boom').replace(/son görev bölgesi/g,'Final Mission Region').replace(/sabit lander/g,'Stationary Lander').replace(/Ay yürüyüşü ekibi/g,'Moonwalkers');
   }
-  function idMissionNumber(record){return record.id.match(/^apollo-(\d+)/)?.[1]||'00';}
+  function idMissionNumber(id){return String(id?.id??id??'').match(/^apollo-(\d+)/)?.[1]||'00';}
   function displayRegion(record){return language==='tr'?(record.regionTr||record.region):(record.regionEn||record.region.replace('Çarpma yeri belirlenmedi','Impact site undetermined').replace('kesin konum bilinmiyor','exact location unknown').replace('Kesin konum bilinmiyor','Exact location unknown').replace('tahmini çarpma','estimated impact').replace('belirsiz alan','uncertain area'));}
   function displayCoordinates(record){return language==='tr'?(record.coordsTr||record.coords):(record.coordsEn||record.coords.replaceAll('° K','° N').replaceAll('° G','° S').replaceAll('° D','° E').replaceAll('° B','° W').replace('Kesin konum bilinmiyor','Exact location unknown').replace('yaklaşık','approx.'));}
   function displayStory(record){
@@ -286,32 +286,33 @@
         slopeY=(pixel(c.dem.pixels,c.dem.width,c.dem.height,dx,dy+4)-pixel(c.dem.pixels,c.dem.width,c.dem.height,dx,dy-4))/255,
         light=clamp01(nx*sunX+nz*sunZ),
         relief=clamp01(.72+(-slopeX*sunX+slopeY*.35)*2.4),
-        surface=clamp01((texture*.72+terrain*.2+.08)*relief),
-        brightness=clamp01((.18+surface*.68)*(.34+light*.66)),
+        surface=clamp01((texture*.68+terrain*.24+.08)*relief),
+        brightness=clamp01(.12+surface*.24+Math.pow(light,.62)*.64),
         level=Math.min(bucketCount-1,Math.floor(brightness*(bucketCount-1))),
         dotRadius=step*(.52+brightness*.12);
+      if(light<=.008)continue;
       buckets[level].push([size/2+x,size/2+y,dotRadius]);
     }
     buckets.forEach((dots,level)=>{
-      if(!dots.length)return;const tone=Math.round(205+level*5.5);context.beginPath();
+      if(!dots.length)return;const tone=Math.round(214+level*4.6);context.beginPath();
       for(const [x,y,r] of dots){context.moveTo(x+r,y);context.arc(x,y,r,0,Math.PI*2);}
-      const representativeAlpha=.34+(level/(bucketCount-1))*.64;
+      const representativeAlpha=.58+(level/(bucketCount-1))*.4;
       context.fillStyle=`rgba(${tone},${tone+4},${tone-2},${representativeAlpha.toFixed(3)})`;context.fill();
     });
   }
   async function runMoonPhaseJourney(){
     const boot=$('#boot-screen'),cards=[...document.querySelectorAll('.phase-card')],fractions=[.025,.16,.33,.5,.67,.84,.985];
-    const setActive=(index)=>cards.forEach((card,i)=>{card.classList.toggle('active',i===index);if(i===index)card.classList.add('visited');});
+    const setActive=(index)=>{cards.forEach((card,i)=>{card.classList.toggle('active',i===index);if(i===index)card.classList.add('visited');});const phase=cards[index]?.querySelector('.phase-label')?.textContent||'LUNAR PHASE';$('#phase-current').textContent=`${String(index+1).padStart(2,'0')} / 07 · ${phase}`;};
     try{
       const [surface,elevation]=await Promise.all([image('./assets/maps/moon-color.jpg'),image('./assets/maps/moon-height.png')]);
       const albedo=imagePixels(surface),dem=imagePixels(elevation);
       cards.forEach((card,index)=>paintDottedMoon(card.querySelector('canvas'),fractions[index],albedo,dem));
     }catch(error){console.warn('Dotted Moon artwork could not load',error);}
-    boot.classList.add('phase-ready');setActive(3);await new Promise(resolve=>setTimeout(resolve,420));
+    boot.classList.add('phase-ready');setActive(3);await new Promise(resolve=>setTimeout(resolve,180));
     const journey=[2,1,0,1,2,3,4,5,6];
-    for(const index of journey){setActive(index);await new Promise(resolve=>setTimeout(resolve,360));}
-    boot.classList.add('show-gallery');await new Promise(resolve=>setTimeout(resolve,1650));
-    boot.classList.add('return-to-center');setActive(3);await new Promise(resolve=>setTimeout(resolve,720));
+    for(const index of journey){setActive(index);await new Promise(resolve=>setTimeout(resolve,155));}
+    boot.classList.add('show-gallery');$('#phase-current').textContent='ARCHIVE SIGNAL · ACQUIRED';await new Promise(resolve=>setTimeout(resolve,720));
+    boot.classList.add('return-to-center');setActive(3);await new Promise(resolve=>setTimeout(resolve,340));
   }
 
   class SiteMeshMap {
