@@ -302,7 +302,7 @@
   }
   const clamp01=value=>Math.max(0,Math.min(1,value));
   function createDottedMoon(canvas,albedo,dem){
-    const cssSize=canvas.getBoundingClientRect().width||180,dpr=Math.min(window.devicePixelRatio||1,2.5),size=Math.max(96,Math.round(cssSize*dpr));
+    const cssSize=canvas.getBoundingClientRect().width||108,dpr=Math.min(window.devicePixelRatio||1,2),size=Math.max(96,Math.round(cssSize*dpr));
     canvas.width=size;canvas.height=size;const radius=size*.445,step=Math.max(1.45,dpr*.78),dots=[],c={a:albedo,dem};
     const pixel=(data,w,h,x,y)=>{x=(x%w+w)%w;y=Math.max(0,Math.min(h-1,y));return data[(y*w+x)*4];};
     for(let y=-radius;y<=radius;y+=step)for(let x=-radius;x<=radius;x+=step){
@@ -318,57 +318,64 @@
         surface=clamp01((texture*.68+terrain*.24+.08)*relief),
         seed=Math.abs(Math.sin((x+431.7)*127.1+(y+173.3)*311.7)*43758.5453),
         random=seed-Math.floor(seed);
-      dots.push({x:size/2+x,y:size/2+y,nx,ny,surface,sweep:(nx+1)*.5,radius:step*(.48+surface*.15),sparkle:random>.995,sparklePhase:random*Math.PI*2});
+      dots.push({x:size/2+x,y:size/2+y,nx,ny,surface,phase:lunarShadowPhase(nx,ny),radius:step*(.48+surface*.15),sparkle:random>.995});
     }
-    return {size,step,dots,context:canvas.getContext('2d')};
+    dots.sort((a,b)=>a.phase-b.phase||a.x-b.x);
+    return {size,step,dots,drawn:0,context:canvas.getContext('2d')};
   }
-  function lunarShadowOffset(illumination){
+  function lunarShadowPhase(nx,ny){
     let low=0,high=2;
     for(let i=0;i<18;i++){
       const offset=(low+high)*.5,half=offset*.5;
-      const lit=1-(2*Math.acos(Math.min(1,half))-half*Math.sqrt(Math.max(0,4-offset*offset)))/Math.PI;
-      if(lit<illumination)low=offset;else high=offset;
+      if((nx+offset)**2+ny**2>1)high=offset;else low=offset;
     }
-    return (low+high)*.5;
+    return high*.5;
   }
-  function paintDottedMoon(model,illumination,sweepProgress,now=performance.now()){
-    const {size,step,dots,context}=model;
-    context.clearRect(0,0,size,size);
-    const shadowX=lunarShadowOffset(illumination),bucketCount=9,buckets=Array.from({length:bucketCount},()=>[]),sparkles=[];
-    for(const dot of dots){
-      if(dot.sweep>sweepProgress)continue;
-      if((dot.nx-shadowX)**2+dot.ny**2<=1)continue;
-      const brightness=clamp01(.28+dot.surface*.68),level=Math.min(bucketCount-1,Math.floor(brightness*(bucketCount-1)));
+  function lunarPhaseThreshold(illumination){
+    let low=0,high=2;
+    for(let i=0;i<18;i++){
+      const shift=(low+high)*.5,half=shift*.5;
+      const lit=1-(2*Math.acos(Math.min(1,half))-half*Math.sqrt(Math.max(0,4-shift*shift)))/Math.PI;
+      if(lit<illumination)low=shift;else high=shift;
+    }
+    return high*.5;
+  }
+  function paintMoonDotBatch(model,end){
+    const {dots,context}=model,bucketCount=8,buckets=Array.from({length:bucketCount},()=>[]),sparkles=[];
+    for(let index=model.drawn;index<end;index++){
+      const dot=dots[index],brightness=clamp01(.28+dot.surface*.68),level=Math.min(bucketCount-1,Math.floor(brightness*(bucketCount-1)));
       buckets[level].push([dot.x,dot.y,dot.radius]);
-      if(dot.sparkle){const pulse=(Math.sin(now*.0018+dot.sparklePhase)+1)*.5;if(pulse>.91)sparkles.push([dot.x,dot.y,dot.radius,pulse]);}
+      if(dot.sparkle)sparkles.push(dot);
     }
     buckets.forEach((dots,level)=>{
-      if(!dots.length)return;const tone=Math.round(214+level*4.6);context.beginPath();
+      if(!dots.length)return;const tone=Math.round(210+level*5.1);context.beginPath();
       for(const [x,y,r] of dots){context.moveTo(x+r,y);context.arc(x,y,r,0,Math.PI*2);}
-      const representativeAlpha=.58+(level/(bucketCount-1))*.4;
+      const representativeAlpha=.52+(level/(bucketCount-1))*.44;
       context.fillStyle=`rgba(${tone},${tone+4},${tone-2},${representativeAlpha.toFixed(3)})`;context.fill();
     });
     context.save();context.shadowColor='rgba(226,244,210,.8)';context.shadowBlur=3;
-    for(const [x,y,r,pulse] of sparkles){context.beginPath();context.arc(x,y,r*(1.1+pulse*.35),0,Math.PI*2);context.fillStyle=`rgba(244,250,232,${(.15+pulse*.32).toFixed(3)})`;context.fill();}
+    for(const dot of sparkles){context.beginPath();context.arc(dot.x,dot.y,dot.radius*1.3,0,Math.PI*2);context.fillStyle='rgba(244,250,232,.32)';context.fill();}
     context.restore();
+    model.drawn=end;
   }
   async function runMoonPhaseJourney(){
     const boot=$('#boot-screen'),canvas=$('#phase-moon'),caption=$('#phase-current');
     try{
       const [surface,elevation]=await Promise.all([image('./assets/maps/moon-color.jpg'),image('./assets/maps/moon-height.png')]);
       const albedo=imagePixels(surface),dem=imagePixels(elevation),model=createDottedMoon(canvas,albedo,dem);
-      paintDottedMoon(model,.015,.035);
       caption.textContent=language==='tr'?'YENİ AY · 02% AYDINLIK':'NEW MOON · 02% ILLUMINATED';
       boot.classList.add('phase-ready');
-      const started=performance.now(),duration=1250;
+      const started=performance.now(),duration=900,batchSize=900;
       await new Promise(resolve=>{
         const frame=now=>{
-          const t=Math.min(1,(now-started)/duration),eased=t*t*(3-2*t),illumination=.015+.985*eased,sweep=.035+.965*eased;
-          paintDottedMoon(model,illumination,sweep,now);
+          const t=Math.min(1,(now-started)/duration),eased=t*t*(3-2*t),illumination=.01+.99*eased,phase=lunarPhaseThreshold(illumination);
+          let target=0,upper=model.dots.length;
+          while(target<upper){const middle=(target+upper)>>1;if(model.dots[middle].phase<=phase)target=middle+1;else upper=middle;}
+          const end=Math.min(target,model.drawn+batchSize);if(end>model.drawn)paintMoonDotBatch(model,end);
           const label=illumination<.09?'NEW MOON':illumination<.39?'WAXING CRESCENT':illumination<.61?'FIRST QUARTER':illumination<.96?'WAXING GIBBOUS':'FULL MOON';
           const localized=language==='tr'?({'NEW MOON':'YENİ AY','WAXING CRESCENT':'HİLAL','FIRST QUARTER':'İLK DÖRDÜN','WAXING GIBBOUS':'ŞİŞKİN AY','FULL MOON':'DOLUNAY'}[label]):label;
           caption.textContent=`${localized} · ${String(Math.round(illumination*100)).padStart(2,'0')}% ${language==='tr'?'AYDINLIK':'ILLUMINATED'}`;
-          if(t<1)requestAnimationFrame(frame);else resolve();
+          if(t<1||model.drawn<model.dots.length)requestAnimationFrame(frame);else resolve();
         };
         requestAnimationFrame(frame);
       });
@@ -909,13 +916,11 @@
       const position = this.project(record.lon, record.lat), pin = document.createElement('button');
         if (!position.visible) continue;
         const crew=record.type==='crew';
-        const crewIndex=crew?records.moon.filter(item=>item.type==='crew').findIndex(item=>item.id===record.id):0;
-        const angle=crewIndex*Math.PI/3-Math.PI/2,offsetX=crew?Math.cos(angle)*21:0,offsetY=crew?Math.sin(angle)*21:0;
         pin.className = `mesh-pin ${crew?'crew-pin':record.status === 'active' ? 'operational-active' : 'operational-inactive'}${record.id === selected ? ' active' : ''}`;
-        pin.style.left = `${position.x+offsetX-(crew?20:0)}px`; pin.style.top = `${position.y+offsetY-(crew?20:0)}px`;
+        pin.style.left = `${position.x-(crew?20:12)}px`; pin.style.top = `${position.y-(crew?36:12)}px`;
         pin.setAttribute('aria-label', crew?`${displayName(record)} — ${record.crew} — ${displayRegion(record)}`:`${displayName(record)} — ${record.status === 'active' ? tr('faal') : tr('inactive')} — ${record.confidenceText}`);
         pin.title = displayName(record);
-        pin.innerHTML = crew?`<svg viewBox="0 0 40 40" aria-hidden="true"><line x1="20" y1="20" x2="${20-offsetX}" y2="${20-offsetY}"/><circle class="site-anchor" cx="${20-offsetX}" cy="${20-offsetY}" r="2"/><circle class="crew-badge" cx="20" cy="20" r="9.5"/></svg><span>${idMissionNumber(record.id)}</span>`:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8 14.5 8l5.7-1.2-1.2 5.7 3.2 4.8-5.9.5L12 22l-4.3-4.2-5.9-.5L5 12.5 3.8 6.8 9.5 8z"/><circle cx="12" cy="12.5" r="2.2"/></svg>';
+        pin.innerHTML = crew?`<svg viewBox="0 0 40 40" aria-hidden="true"><path class="astronaut-silhouette" d="M20 3.5c-5.2 0-8.5 3.9-8.5 9.1v2.6c0 3.2 1.7 5.8 4.4 7.1l-.6 2.1c-3.8.9-6.1 3.6-6.1 7.3v2.1h21.6v-2.1c0-3.7-2.3-6.4-6.1-7.3l-.6-2.1c2.7-1.3 4.4-3.9 4.4-7.1v-2.6c0-5.2-3.3-9.1-8.5-9.1Z"/><path class="astronaut-visor" d="M13.5 11.5c0-2.4 2.6-4.2 6.5-4.2s6.5 1.8 6.5 4.2v2.1c0 2.3-2.7 3.7-6.5 3.7s-6.5-1.4-6.5-3.7z"/><path class="astronaut-pack" d="M9.6 14.2h2v7.1l-2 1.4zM28.4 14.2h2v8.5l-2-1.4z"/><path class="astronaut-seam" d="M16.3 25.1h7.4v6.1h-7.4zM16.3 28.1h7.4"/><circle class="site-anchor" cx="20" cy="36.2" r="1.7"/></svg><span>${idMissionNumber(record.id)}</span>`:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8 14.5 8l5.7-1.2-1.2 5.7 3.2 4.8-5.9.5L12 22l-4.3-4.2-5.9-.5L5 12.5 3.8 6.8 9.5 8z"/><circle cx="12" cy="12.5" r="2.2"/></svg>';
         pin.addEventListener('click', event => { event.stopPropagation(); selectRecord(record.id); });
         this.pinLayer.append(pin);
       }
